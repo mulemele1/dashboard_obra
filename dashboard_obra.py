@@ -28,7 +28,7 @@ except ImportError:
 
 # Tentar importar outras bibliotecas opcionais
 try:
-    from PIL import Image
+    # from PIL import Image  # Removido: incompatível com Python 3.13.9
     PILLOW_AVAILABLE = True
 except ImportError:
     PILLOW_AVAILABLE = False
