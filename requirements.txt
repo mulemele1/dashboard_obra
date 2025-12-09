@@ -1,8 +1,9 @@
+# Versões compatíveis com Python 3.13
 plotly==5.18.0
 streamlit==1.28.1
-pandas==2.1.4
-numpy==1.24.4
-Pillow==10.1.0
+pandas==2.2.0
+numpy==1.26.4
+Pillow==10.3.0
 reportlab==4.0.4
 openpyxl==3.1.2
 PyYAML==6.0.1
