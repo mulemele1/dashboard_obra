@@ -1,9 +1,8 @@
-# Use este conteúdo exato:
 plotly==5.18.0
 streamlit==1.28.1
-pandas==2.1.4
-numpy==1.26.4
-Pillow==10.1.0
-reportlab==4.0.4
+pandas==1.5.3
+numpy==1.24.3
+Pillow==9.5.0
+reportlab==3.6.12
 openpyxl==3.1.2
-PyYAML==6.0.1
+PyYAML==6.0
