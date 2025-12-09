@@ -1,0 +1,23 @@
+credentials:
+  usernames:
+    fiscal:
+      email: fiscal@obra.com
+      name: Gildo José Cossa
+      password: $2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW  # fiscal123
+    proprietario:
+      email: proprietario@obra.com
+      name: Carlos Silva
+      password: $2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW  # proprietario123
+    financeiro:
+      email: financeiro@obra.com
+      name: Maria Santos
+      password: $2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW  # financeiro123
+    admin:
+      email: admin@obra.com
+      name: Administrador
+      password: $2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW  # admin123
+
+cookie:
+  expiry_days: 30
+  key: "obra_dashboard"
+  name: "obra_auth"
