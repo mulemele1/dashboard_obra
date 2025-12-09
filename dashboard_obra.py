@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 import datetime
 from datetime import date, timedelta
-import plotly.express as px
-import plotly.graph_objects as go
 import sqlite3
 import hashlib
 import smtplib
@@ -14,18 +12,42 @@ from email.mime.base import MIMEBase
 from email import encoders
 import io
 import base64
-from PIL import Image
-import requests
-from twilio.rest import Client
 import json
 import os
 from pathlib import Path
 import tempfile
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as ReportLabImage
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.lib import colors
+
+# Tentar importar plotly com fallback
+try:
+    import plotly.express as px
+    import plotly.graph_objects as go
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
+    st.warning("⚠️ Plotly não está disponível. Instale com: pip install plotly")
+
+# Tentar importar outras bibliotecas opcionais
+try:
+    from PIL import Image
+    PILLOW_AVAILABLE = True
+except ImportError:
+    PILLOW_AVAILABLE = False
+
+try:
+    from twilio.rest import Client
+    TWILIO_AVAILABLE = True
+except ImportError:
+    TWILIO_AVAILABLE = False
+
+try:
+    from reportlab.lib.pagesizes import letter
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.lib import colors
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
 
 # ============================================
 # CONFIGURAÇÃO INICIAL

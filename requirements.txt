@@ -1,37 +1,8 @@
-# Core Streamlit
-streamlit==1.28.0
-
-# Data manipulation
+plotly==5.18.0
+streamlit==1.28.1
 pandas==2.1.4
 numpy==1.24.4
-
-# Visualization
-plotly==5.17.0
-
-# Database
-sqlite3
-
-# Image processing
 Pillow==10.1.0
-
-# WhatsApp integration
-twilio==8.9.0
-
-# PDF generation
 reportlab==4.0.4
-
-# Excel export
 openpyxl==3.1.2
-
-# Configuration
 PyYAML==6.0.1
-
-# Optional authentication
-streamlit-authenticator==0.2.3
-extra-streamlit-components==0.1.65
-pyjwt==2.8.0
-bcrypt==4.1.2
-cryptography==41.0.7
-
-# HTTP requests
-aiohttp==3.9.1
