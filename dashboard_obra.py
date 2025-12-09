@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 import pandas as pd
 import numpy as np
 import datetime
@@ -24,14 +24,9 @@ try:
     PLOTLY_AVAILABLE = True
 except ImportError:
     PLOTLY_AVAILABLE = False
-    st.warning("⚠️ Plotly não está disponível. Instale com: pip install plotly")
+    st.warning("âš ï¸ Plotly nÃ£o estÃ¡ disponÃ­vel. Instale com: pip install plotly")
 
-# Tentar importar outras bibliotecas opcionais
-try:
-    # from PIL import Image  # Removido: incompat�vel com Python 3.13.9
-    PILLOW_AVAILABLE = True
-except ImportError:
-    PILLOW_AVAILABLE = False
+# PIL removido - incompatível com Python 3.13.9
 
 try:
     from twilio.rest import Client
@@ -50,13 +45,13 @@ except ImportError:
     REPORTLAB_AVAILABLE = False
 
 # ============================================
-# CONFIGURAÇÃO INICIAL
+# CONFIGURAÃ‡ÃƒO INICIAL
 # ============================================
 
-# Configuração da página
+# ConfiguraÃ§Ã£o da pÃ¡gina
 st.set_page_config(
-    page_title="Dashboard de Obra Avançado",
-    page_icon="🏗️",
+    page_title="Dashboard de Obra AvanÃ§ado",
+    page_icon="ðŸ—ï¸",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -142,15 +137,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ============================================
-# INICIALIZAÇÃO DO BANCO DE DADOS
+# INICIALIZAÃ‡ÃƒO DO BANCO DE DADOS
 # ============================================
 
 def init_database():
-    """Inicializa o banco de dados SQLite com todas as tabelas necessárias"""
+    """Inicializa o banco de dados SQLite com todas as tabelas necessÃ¡rias"""
     conn = sqlite3.connect('controle_obra.db', check_same_thread=False)
     c = conn.cursor()
     
-    # Tabela de usuários
+    # Tabela de usuÃ¡rios
     c.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -180,7 +175,7 @@ def init_database():
         )
     ''')
     
-    # Tabela de relatórios diários
+    # Tabela de relatÃ³rios diÃ¡rios
     c.execute('''
         CREATE TABLE IF NOT EXISTS relatorios_diarios (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -256,11 +251,11 @@ def init_database():
         )
     ''')
     
-    # Inserir usuários padrão se a tabela estiver vazia
+    # Inserir usuÃ¡rios padrÃ£o se a tabela estiver vazia
     c.execute("SELECT COUNT(*) FROM usuarios")
     if c.fetchone()[0] == 0:
         usuarios_padrao = [
-            ('fiscal', 'Gildo José Cossa', 'fiscal@obra.com', 
+            ('fiscal', 'Gildo JosÃ© Cossa', 'fiscal@obra.com', 
              hashlib.sha256('fiscal123'.encode()).hexdigest(), 'fiscal', '+258841234567'),
             ('proprietario', 'Carlos Silva', 'proprietario@obra.com',
              hashlib.sha256('proprietario123'.encode()).hexdigest(), 'proprietario', '+258842345678'),
@@ -274,15 +269,15 @@ def init_database():
             VALUES (?, ?, ?, ?, ?, ?)
         ''', usuarios_padrao)
     
-    # Inserir projeto padrão
+    # Inserir projeto padrÃ£o
     c.execute("SELECT COUNT(*) FROM projetos")
     if c.fetchone()[0] == 0:
         c.execute('''
             INSERT INTO projetos (nome, descricao, localizacao, orcamento_total, 
                                  data_inicio, data_fim_previsto, responsavel_id)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', ('LBO XAI-XA - Requalificação com Expansão',
-              'Projeto de requalificação com expansão da estrutura existente',
+        ''', ('LBO XAI-XA - RequalificaÃ§Ã£o com ExpansÃ£o',
+              'Projeto de requalificaÃ§Ã£o com expansÃ£o da estrutura existente',
               'Xai-Xai, Gaza', 2500000.00,
               '2025-02-01', '2025-08-01', 1))
     
@@ -293,11 +288,11 @@ def init_database():
 conn = init_database()
 
 # ============================================
-# SISTEMA DE AUTENTICAÇÃO
+# SISTEMA DE AUTENTICAÃ‡ÃƒO
 # ============================================
 
 def verificar_login(username, password):
-    """Verifica as credenciais do usuário"""
+    """Verifica as credenciais do usuÃ¡rio"""
     c = conn.cursor()
     senha_hash = hashlib.sha256(password.encode()).hexdigest()
     
@@ -309,7 +304,7 @@ def verificar_login(username, password):
     return c.fetchone()
 
 def criar_usuario(username, nome, email, password, tipo, telefone=""):
-    """Cria um novo usuário"""
+    """Cria um novo usuÃ¡rio"""
     try:
         c = conn.cursor()
         senha_hash = hashlib.sha256(password.encode()).hexdigest()
@@ -325,11 +320,11 @@ def criar_usuario(username, nome, email, password, tipo, telefone=""):
         return False
 
 # ============================================
-# FUNÇÕES DE GERENCIAMENTO DE PROJETOS
+# FUNÃ‡Ã•ES DE GERENCIAMENTO DE PROJETOS
 # ============================================
 
 def obter_projetos():
-    """Obtém todos os projetos"""
+    """ObtÃ©m todos os projetos"""
     c = conn.cursor()
     c.execute('''
         SELECT p.*, u.nome as responsavel_nome 
@@ -340,7 +335,7 @@ def obter_projetos():
     return c.fetchall()
 
 def obter_projeto_por_id(projeto_id):
-    """Obtém um projeto específico"""
+    """ObtÃ©m um projeto especÃ­fico"""
     c = conn.cursor()
     c.execute('''
         SELECT p.*, u.nome as responsavel_nome 
@@ -371,15 +366,15 @@ def criar_projeto(nome, descricao, localizacao, orcamento, data_inicio, data_fim
         return None
 
 # ============================================
-# FUNÇÕES DE RELATÓRIOS DIÁRIOS
+# FUNÃ‡Ã•ES DE RELATÃ“RIOS DIÃRIOS
 # ============================================
 
 def salvar_relatorio(data, projeto_id, usuario_id, **dados):
-    """Salva um relatório diário"""
+    """Salva um relatÃ³rio diÃ¡rio"""
     try:
         c = conn.cursor()
         
-        # Verificar se já existe relatório para esta data e projeto
+        # Verificar se jÃ¡ existe relatÃ³rio para esta data e projeto
         c.execute('''
             SELECT id FROM relatorios_diarios 
             WHERE data = ? AND projeto_id = ?
@@ -388,7 +383,7 @@ def salvar_relatorio(data, projeto_id, usuario_id, **dados):
         relatorio_existente = c.fetchone()
         
         if relatorio_existente:
-            # Atualizar relatório existente
+            # Atualizar relatÃ³rio existente
             c.execute('''
                 UPDATE relatorios_diarios 
                 SET temperatura = ?, atividades = ?, equipe = ?, equipamentos = ?,
@@ -402,7 +397,7 @@ def salvar_relatorio(data, projeto_id, usuario_id, **dados):
             
             relatorio_id = relatorio_existente[0]
         else:
-            # Inserir novo relatório
+            # Inserir novo relatÃ³rio
             c.execute('''
                 INSERT INTO relatorios_diarios 
                 (data, projeto_id, usuario_id, temperatura, atividades, equipe, 
@@ -421,7 +416,7 @@ def salvar_relatorio(data, projeto_id, usuario_id, **dados):
         # Verificar se precisa criar alertas
         if dados.get('acidentes') != 'Nenhum' and dados.get('acidentes'):
             criar_alerta(projeto_id, 'emergencia', 
-                        f'Acidente reportado no dia {data}. Verificar relatório.')
+                        f'Acidente reportado no dia {data}. Verificar relatÃ³rio.')
         
         if dados.get('produtividade', 100) < 60:
             criar_alerta(projeto_id, 'aviso', 
@@ -429,11 +424,11 @@ def salvar_relatorio(data, projeto_id, usuario_id, **dados):
         
         return relatorio_id
     except Exception as e:
-        st.error(f"Erro ao salvar relatório: {str(e)}")
+        st.error(f"Erro ao salvar relatÃ³rio: {str(e)}")
         return None
 
 def obter_relatorios(projeto_id=None, data_inicio=None, data_fim=None):
-    """Obtém relatórios com filtros"""
+    """ObtÃ©m relatÃ³rios com filtros"""
     c = conn.cursor()
     
     query = '''
@@ -469,10 +464,10 @@ def obter_relatorios(projeto_id=None, data_inicio=None, data_fim=None):
 def salvar_foto(relatorio_id, foto_bytes, descricao=""):
     """Salva uma foto no sistema de arquivos e registra no banco"""
     try:
-        # Criar diretório para fotos se não existir
+        # Criar diretÃ³rio para fotos se nÃ£o existir
         os.makedirs('fotos_obra', exist_ok=True)
         
-        # Gerar nome único para o arquivo
+        # Gerar nome Ãºnico para o arquivo
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"foto_{relatorio_id}_{timestamp}.jpg"
         filepath = os.path.join('fotos_obra', filename)
@@ -494,7 +489,7 @@ def salvar_foto(relatorio_id, foto_bytes, descricao=""):
         return False
 
 def obter_fotos(relatorio_id):
-    """Obtém todas as fotos de um relatório"""
+    """ObtÃ©m todas as fotos de um relatÃ³rio"""
     c = conn.cursor()
     c.execute('''
         SELECT * FROM fotos_obra 
@@ -518,10 +513,10 @@ def criar_alerta(projeto_id, tipo, mensagem):
         
         conn.commit()
         
-        # Enviar notificação por email (se configurado)
+        # Enviar notificaÃ§Ã£o por email (se configurado)
         enviar_email_alerta(projeto_id, tipo, mensagem)
         
-        # Enviar notificação por WhatsApp (se configurado)
+        # Enviar notificaÃ§Ã£o por WhatsApp (se configurado)
         enviar_whatsapp_alerta(projeto_id, tipo, mensagem)
         
         return True
@@ -529,7 +524,7 @@ def criar_alerta(projeto_id, tipo, mensagem):
         return False
 
 def obter_alertas(projeto_id=None, nao_lidos=False):
-    """Obtém alertas com filtros"""
+    """ObtÃ©m alertas com filtros"""
     c = conn.cursor()
     
     query = '''
@@ -559,12 +554,12 @@ def marcar_alerta_como_lido(alerta_id):
     conn.commit()
 
 # ============================================
-# INTEGRAÇÃO COM EMAIL
+# INTEGRAÃ‡ÃƒO COM EMAIL
 # ============================================
 
 def enviar_email_alerta(projeto_id, tipo, mensagem):
     """Envia alerta por email"""
-    # Configurações de email (substituir com suas configurações)
+    # ConfiguraÃ§Ãµes de email (substituir com suas configuraÃ§Ãµes)
     config_email = {
         'smtp_server': 'smtp.gmail.com',
         'smtp_port': 587,
@@ -574,9 +569,9 @@ def enviar_email_alerta(projeto_id, tipo, mensagem):
     }
     
     try:
-        # Verificar se as configurações estão definidas
+        # Verificar se as configuraÃ§Ãµes estÃ£o definidas
         if config_email['email_from'] == 'seu_email@gmail.com':
-            return False  # Configuração não definida
+            return False  # ConfiguraÃ§Ã£o nÃ£o definida
         
         projeto = obter_projeto_por_id(projeto_id)
         
@@ -608,12 +603,12 @@ def enviar_email_alerta(projeto_id, tipo, mensagem):
         return False
 
 # ============================================
-# INTEGRAÇÃO COM WHATSAPP (TWILIO)
+# INTEGRAÃ‡ÃƒO COM WHATSAPP (TWILIO)
 # ============================================
 
 def enviar_whatsapp_alerta(projeto_id, tipo, mensagem):
     """Envia alerta por WhatsApp usando Twilio"""
-    # Configurações Twilio (substituir com suas credenciais)
+    # ConfiguraÃ§Ãµes Twilio (substituir com suas credenciais)
     config_whatsapp = {
         'account_sid': 'sua_account_sid',
         'auth_token': 'seu_auth_token',
@@ -623,7 +618,7 @@ def enviar_whatsapp_alerta(projeto_id, tipo, mensagem):
     
     try:
         if config_whatsapp['account_sid'] == 'sua_account_sid':
-            return False  # Configuração não definida
+            return False  # ConfiguraÃ§Ã£o nÃ£o definida
         
         projeto = obter_projeto_por_id(projeto_id)
         
@@ -631,7 +626,7 @@ def enviar_whatsapp_alerta(projeto_id, tipo, mensagem):
         
         for to_number in config_whatsapp['to_numbers']:
             message = client.messages.create(
-                body=f'🚨 ALERTA [{tipo}] - {projeto[1]}\n{mensagem}',
+                body=f'ðŸš¨ ALERTA [{tipo}] - {projeto[1]}\n{mensagem}',
                 from_=config_whatsapp['from_number'],
                 to=to_number
             )
@@ -641,13 +636,13 @@ def enviar_whatsapp_alerta(projeto_id, tipo, mensagem):
         return False
 
 # ============================================
-# GERADOR DE RELATÓRIOS PDF
+# GERADOR DE RELATÃ“RIOS PDF
 # ============================================
 
 def gerar_relatorio_pdf(relatorio_id):
-    """Gera um relatório em PDF"""
+    """Gera um relatÃ³rio em PDF"""
     try:
-        # Obter dados do relatório
+        # Obter dados do relatÃ³rio
         c = conn.cursor()
         c.execute('''
             SELECT r.*, p.nome as projeto_nome, u.nome as usuario_nome 
@@ -677,17 +672,17 @@ def gerar_relatorio_pdf(relatorio_id):
             textColor=colors.HexColor('#1E3A8A')
         )
         
-        # Título
-        elements.append(Paragraph(f"Relatório Diário de Obra", title_style))
+        # TÃ­tulo
+        elements.append(Paragraph(f"RelatÃ³rio DiÃ¡rio de Obra", title_style))
         
-        # Informações básicas - ÍNDICES CORRIGIDOS
+        # InformaÃ§Ãµes bÃ¡sicas - ÃNDICES CORRIGIDOS
         # Colunas: 0:id, 1:data, 2:projeto_id, 3:usuario_id, 4:temperatura, 5:atividades,
         # 6:equipe, 7:equipamentos, 8:ocorrencias, 9:acidentes, 10:plano_amanha,
         # 11:status, 12:produtividade, 13:observacoes, 14:projeto_nome, 15:usuario_nome
         info_data = [
             ["Data:", relatorio[1]],
             ["Projeto:", relatorio[14]],  # projeto_nome
-            ["Responsável:", relatorio[15]],  # usuario_nome
+            ["ResponsÃ¡vel:", relatorio[15]],  # usuario_nome
             ["Status:", relatorio[11]],
             ["Produtividade:", f"{relatorio[12]}%"]
         ]
@@ -706,16 +701,16 @@ def gerar_relatorio_pdf(relatorio_id):
         elements.append(info_table)
         elements.append(Spacer(1, 20))
         
-        # Seções do relatório - ÍNDICES CORRIGIDOS
+        # SeÃ§Ãµes do relatÃ³rio - ÃNDICES CORRIGIDOS
         secoes = [
-            ("Condições Climáticas", relatorio[4]),  # temperatura
+            ("CondiÃ§Ãµes ClimÃ¡ticas", relatorio[4]),  # temperatura
             ("Atividades Realizadas", relatorio[5]),  # atividades
             ("Equipe Presente", relatorio[6]),  # equipe
             ("Equipamentos Utilizados", relatorio[7]),  # equipamentos
-            ("Ocorrências", relatorio[8]),  # ocorrencias
+            ("OcorrÃªncias", relatorio[8]),  # ocorrencias
             ("Acidentes", relatorio[9]),  # acidentes
-            ("Plano para Amanhã", relatorio[10]),  # plano_amanha
-            ("Observações", relatorio[13])  # observacoes
+            ("Plano para AmanhÃ£", relatorio[10]),  # plano_amanha
+            ("ObservaÃ§Ãµes", relatorio[13])  # observacoes
         ]
         
         for titulo, conteudo in secoes:
@@ -734,9 +729,9 @@ def gerar_relatorio_pdf(relatorio_id):
         return None
 
 def gerar_relatorio_mensal_pdf(projeto_id, mes, ano):
-    """Gera relatório mensal em PDF"""
+    """Gera relatÃ³rio mensal em PDF"""
     try:
-        # Obter dados do mês
+        # Obter dados do mÃªs
         data_inicio = f"{ano}-{mes:02d}-01"
         if mes == 12:
             data_fim = f"{ano+1}-01-01"
@@ -757,24 +752,24 @@ def gerar_relatorio_mensal_pdf(projeto_id, mes, ano):
         # Estilos
         styles = getSampleStyleSheet()
         
-        # Título
-        elements.append(Paragraph(f"Relatório Mensal de Obra", styles['Heading1']))
+        # TÃ­tulo
+        elements.append(Paragraph(f"RelatÃ³rio Mensal de Obra", styles['Heading1']))
         elements.append(Paragraph(f"Projeto: {projeto[1]}", styles['Heading2']))
-        elements.append(Paragraph(f"Mês: {mes:02d}/{ano}", styles['Heading2']))
+        elements.append(Paragraph(f"MÃªs: {mes:02d}/{ano}", styles['Heading2']))
         elements.append(Spacer(1, 30))
         
-        # Métricas
+        # MÃ©tricas
         dias_trabalhados = len(relatorios)
         if relatorios:
             produtividade_media = np.mean([r[12] for r in relatorios])
         else:
             produtividade_media = 0
-        dias_concluidos = len([r for r in relatorios if r[11] == 'Concluído'])
+        dias_concluidos = len([r for r in relatorios if r[11] == 'ConcluÃ­do'])
         
         metricas_data = [
             ["Dias Trabalhados:", dias_trabalhados],
-            ["Dias Concluídos:", dias_concluidos],
-            ["Produtividade Média:", f"{produtividade_media:.1f}%"],
+            ["Dias ConcluÃ­dos:", dias_concluidos],
+            ["Produtividade MÃ©dia:", f"{produtividade_media:.1f}%"],
             ["Dias sem Acidente:", len([r for r in relatorios if r[9] == 'Nenhum'])]
         ]
         
@@ -791,7 +786,7 @@ def gerar_relatorio_mensal_pdf(projeto_id, mes, ano):
         elements.append(metricas_table)
         elements.append(Spacer(1, 30))
         
-        # Tabela de relatórios
+        # Tabela de relatÃ³rios
         if relatorios:
             tabela_data = [["Data", "Atividades", "Status", "Produtividade", "Acidentes"]]
             
@@ -804,7 +799,7 @@ def gerar_relatorio_mensal_pdf(projeto_id, mes, ano):
                     atividades,
                     rel[11],
                     f"{rel[12]}%",
-                    "Sim" if rel[9] != 'Nenhum' else "Não"
+                    "Sim" if rel[9] != 'Nenhum' else "NÃ£o"
                 ])
             
             tabela = Table(tabela_data, colWidths=[60, 200, 60, 70, 60])
@@ -826,24 +821,24 @@ def gerar_relatorio_mensal_pdf(projeto_id, mes, ano):
         buffer.seek(0)
         return buffer
     except Exception as e:
-        st.error(f"Erro ao gerar relatório mensal: {str(e)}")
+        st.error(f"Erro ao gerar relatÃ³rio mensal: {str(e)}")
         return None
 
 # ============================================
-# INTERFACE DO USUÁRIO
+# INTERFACE DO USUÃRIO
 # ============================================
 
 # Tela de login
 def tela_login():
     """Exibe a tela de login"""
-    st.markdown('<h1 class="main-header">🏗️ Dashboard de Controle de Obra</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-header">ðŸ—ï¸ Dashboard de Controle de Obra</h1>', unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
         with st.form("login_form"):
             st.subheader("Login")
-            username = st.text_input("Usuário")
+            username = st.text_input("UsuÃ¡rio")
             password = st.text_input("Senha", type="password")
             submit = st.form_submit_button("Entrar")
             
@@ -859,35 +854,35 @@ def tela_login():
                     st.success(f"Bem-vindo, {usuario[2]}!")
                     st.rerun()
                 else:
-                    st.error("Usuário ou senha incorretos")
+                    st.error("UsuÃ¡rio ou senha incorretos")
 
 # Menu principal
 def exibir_menu_principal():
-    """Exibe o menu principal baseado no tipo de usuário"""
+    """Exibe o menu principal baseado no tipo de usuÃ¡rio"""
     usuario = st.session_state.usuario
     
     # Sidebar
     with st.sidebar:
         st.image("https://cdn-icons-png.flaticon.com/512/3067/3067256.png", width=80)
-        st.title(f"Olá, {usuario['nome'].split()[0]}")
+        st.title(f"OlÃ¡, {usuario['nome'].split()[0]}")
         st.caption(f"Tipo: {usuario['tipo'].title()}")
         
-        # Menu baseado no tipo de usuário
+        # Menu baseado no tipo de usuÃ¡rio
         if usuario['tipo'] == 'admin':
-            opcoes = ["📊 Dashboard", "📝 Registrar Relatório", "👥 Gerenciar Usuários", 
-                     "🏗️ Gerenciar Projetos", "📸 Galeria de Fotos", "🚨 Alertas", 
-                     "📈 Relatórios", "⚙️ Configurações"]
+            opcoes = ["ðŸ“Š Dashboard", "ðŸ“ Registrar RelatÃ³rio", "ðŸ‘¥ Gerenciar UsuÃ¡rios", 
+                     "ðŸ—ï¸ Gerenciar Projetos", "ðŸ“¸ Galeria de Fotos", "ðŸš¨ Alertas", 
+                     "ðŸ“ˆ RelatÃ³rios", "âš™ï¸ ConfiguraÃ§Ãµes"]
         elif usuario['tipo'] == 'fiscal':
-            opcoes = ["📊 Dashboard", "📝 Registrar Relatório", "📸 Enviar Fotos", 
-                     "🚨 Alertas", "📈 Meus Relatórios"]
+            opcoes = ["ðŸ“Š Dashboard", "ðŸ“ Registrar RelatÃ³rio", "ðŸ“¸ Enviar Fotos", 
+                     "ðŸš¨ Alertas", "ðŸ“ˆ Meus RelatÃ³rios"]
         elif usuario['tipo'] == 'proprietario':
-            opcoes = ["📊 Dashboard", "👁️ Visualizar Relatórios", "📸 Galeria de Fotos", 
-                     "🚨 Alertas", "📈 Relatórios Financeiros"]
+            opcoes = ["ðŸ“Š Dashboard", "ðŸ‘ï¸ Visualizar RelatÃ³rios", "ðŸ“¸ Galeria de Fotos", 
+                     "ðŸš¨ Alertas", "ðŸ“ˆ RelatÃ³rios Financeiros"]
         else:  # financeiro
-            opcoes = ["📊 Dashboard", "💰 Controle Financeiro", "📈 Relatórios", 
-                     "🚨 Alertas Financeiros"]
+            opcoes = ["ðŸ“Š Dashboard", "ðŸ’° Controle Financeiro", "ðŸ“ˆ RelatÃ³rios", 
+                     "ðŸš¨ Alertas Financeiros"]
         
-        pagina = st.radio("Navegação", opcoes)
+        pagina = st.radio("NavegaÃ§Ã£o", opcoes)
         
         st.markdown("---")
         
@@ -907,54 +902,54 @@ def exibir_menu_principal():
         
         st.markdown("---")
         
-        if st.button("🚪 Sair"):
+        if st.button("ðŸšª Sair"):
             del st.session_state.usuario
             st.rerun()
         
-        st.caption(f"Versão 2.0 | {date.today().strftime('%d/%m/%Y')}")
+        st.caption(f"VersÃ£o 2.0 | {date.today().strftime('%d/%m/%Y')}")
     
-    # Armazenar filtros na sessão
+    # Armazenar filtros na sessÃ£o
     st.session_state.filtros = {
         'projeto_id': projeto_selecionado,
         'data_inicio': data_inicio,
         'data_fim': data_fim
     }
     
-    # Exibir página selecionada
+    # Exibir pÃ¡gina selecionada
     if "Dashboard" in pagina:
         exibir_dashboard(usuario)
-    elif "Registrar Relatório" in pagina:
+    elif "Registrar RelatÃ³rio" in pagina:
         exibir_formulario_relatorio(usuario)
     elif "Enviar Fotos" in pagina or "Galeria de Fotos" in pagina:
         exibir_galeria_fotos()
     elif "Alertas" in pagina:
         exibir_alertas()
-    elif "Gerenciar Usuários" in pagina:
+    elif "Gerenciar UsuÃ¡rios" in pagina:
         exibir_gerenciamento_usuarios()
     elif "Gerenciar Projetos" in pagina:
         exibir_gerenciamento_projetos()
-    elif "Relatórios" in pagina:
+    elif "RelatÃ³rios" in pagina:
         exibir_relatorios_avancados()
     elif "Controle Financeiro" in pagina:
         exibir_controle_financeiro()
-    elif "Configurações" in pagina:
+    elif "ConfiguraÃ§Ãµes" in pagina:
         exibir_configuracoes()
-    elif "Visualizar Relatórios" in pagina or "Meus Relatórios" in pagina:
+    elif "Visualizar RelatÃ³rios" in pagina or "Meus RelatÃ³rios" in pagina:
         exibir_relatorios_lista()
-    elif "Relatórios Financeiros" in pagina:
+    elif "RelatÃ³rios Financeiros" in pagina:
         exibir_relatorios_financeiros()
 
 # ============================================
-# PÁGINAS DA APLICAÇÃO
+# PÃGINAS DA APLICAÃ‡ÃƒO
 # ============================================
 
 def exibir_dashboard(usuario):
     """Exibe o dashboard principal"""
-    st.markdown(f'<h2 class="sub-header">📊 Dashboard - Visão Geral</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 class="sub-header">ðŸ“Š Dashboard - VisÃ£o Geral</h2>', unsafe_allow_html=True)
     
     filtros = st.session_state.filtros
     
-    # Métricas principais
+    # MÃ©tricas principais
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -963,50 +958,50 @@ def exibir_dashboard(usuario):
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         if projeto:
             st.metric("Projeto", projeto[1])
-            st.caption(f"Orçamento: MZN {projeto[4]:,.2f}")
+            st.caption(f"OrÃ§amento: MZN {projeto[4]:,.2f}")
         else:
-            st.metric("Projeto", "Não encontrado")
+            st.metric("Projeto", "NÃ£o encontrado")
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        # Dias trabalhados no período
+        # Dias trabalhados no perÃ­odo
         relatorios = obter_relatorios(filtros['projeto_id'], filtros['data_inicio'], filtros['data_fim'])
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Dias Trabalhados", len(relatorios))
-        dias_concluidos = len([r for r in relatorios if r[11] == 'Concluído'])
-        st.caption(f"Concluídos: {dias_concluidos}")
+        dias_concluidos = len([r for r in relatorios if r[11] == 'ConcluÃ­do'])
+        st.caption(f"ConcluÃ­dos: {dias_concluidos}")
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col3:
-        # Produtividade média
+        # Produtividade mÃ©dia
         if relatorios:
             produtividade_media = np.mean([r[12] for r in relatorios])
             st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.metric("Produtividade Média", f"{produtividade_media:.1f}%")
-            status = "👍 Boa" if produtividade_media >= 80 else "⚠️ Média" if produtividade_media >= 60 else "👎 Baixa"
+            st.metric("Produtividade MÃ©dia", f"{produtividade_media:.1f}%")
+            status = "ðŸ‘ Boa" if produtividade_media >= 80 else "âš ï¸ MÃ©dia" if produtividade_media >= 60 else "ðŸ‘Ž Baixa"
             st.caption(status)
             st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.metric("Produtividade Média", "0%")
+            st.metric("Produtividade MÃ©dia", "0%")
             st.caption("Sem dados")
             st.markdown('</div>', unsafe_allow_html=True)
     
     with col4:
-        # Alertas não lidos
+        # Alertas nÃ£o lidos
         alertas = obter_alertas(filtros['projeto_id'], nao_lidos=True)
         st.markdown('<div class="metric-card">', unsafe_allow_html=True)
         st.metric("Alertas Ativos", len(alertas))
         if alertas:
-            st.caption(f"⚠️ {len([a for a in alertas if a[2] == 'emergencia'])} urgentes")
+            st.caption(f"âš ï¸ {len([a for a in alertas if a[2] == 'emergencia'])} urgentes")
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # Gráficos
+    # GrÃ¡ficos
     col_chart1, col_chart2 = st.columns(2)
     
     with col_chart1:
         if relatorios and len(relatorios) > 0:
-            # Criar DataFrame com índices corrigidos
+            # Criar DataFrame com Ã­ndices corrigidos
             data_list = []
             for rel in relatorios:
                 data_list.append({
@@ -1032,13 +1027,13 @@ def exibir_dashboard(usuario):
             df['data'] = pd.to_datetime(df['data'])
             df = df.sort_values('data')
             
-            fig = px.line(df, x='data', y='produtividade', title='Produtividade Diária',
+            fig = px.line(df, x='data', y='produtividade', title='Produtividade DiÃ¡ria',
                          markers=True, line_shape='linear')
             fig.update_layout(xaxis_title="Data", yaxis_title="Produtividade (%)",
                             hovermode='x unified')
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Sem dados suficientes para gráfico de produtividade")
+            st.info("Sem dados suficientes para grÃ¡fico de produtividade")
     
     with col_chart2:
         if relatorios and len(relatorios) > 0:
@@ -1051,25 +1046,25 @@ def exibir_dashboard(usuario):
             df = pd.DataFrame(data_list)
             status_counts = df['status'].value_counts()
             fig = px.pie(values=status_counts.values, names=status_counts.index,
-                        title='Distribuição de Status', hole=0.4)
+                        title='DistribuiÃ§Ã£o de Status', hole=0.4)
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Sem dados suficientes para gráfico de status")
+            st.info("Sem dados suficientes para grÃ¡fico de status")
     
-    # Últimos relatórios
-    st.markdown('<h3 class="sub-header">📅 Últimos Relatórios</h3>', unsafe_allow_html=True)
+    # Ãšltimos relatÃ³rios
+    st.markdown('<h3 class="sub-header">ðŸ“… Ãšltimos RelatÃ³rios</h3>', unsafe_allow_html=True)
     
     if relatorios:
         for rel in relatorios[:5]:  # Mostrar apenas os 5 mais recentes
-            # ÍNDICES CORRIGIDOS:
+            # ÃNDICES CORRIGIDOS:
             # 0:id, 1:data, 2:projeto_id, 3:usuario_id, 4:temperatura, 5:atividades,
             # 6:equipe, 7:equipamentos, 8:ocorrencias, 9:acidentes, 10:plano_amanha,
             # 11:status, 12:produtividade, 13:observacoes, 14:projeto_nome, 15:usuario_nome
             
-            with st.expander(f"📋 {rel[1]} - {rel[14]} - {rel[11]}"):
+            with st.expander(f"ðŸ“‹ {rel[1]} - {rel[14]} - {rel[11]}"):
                 col_info1, col_info2 = st.columns(2)
                 with col_info1:
-                    st.write(f"**Responsável:** {rel[15]}")  # usuario_nome
+                    st.write(f"**ResponsÃ¡vel:** {rel[15]}")  # usuario_nome
                     st.write(f"**Produtividade:** {rel[12]}%")
                     st.write(f"**Equipe:** {rel[6]}")
                 with col_info2:
@@ -1081,17 +1076,17 @@ def exibir_dashboard(usuario):
                 st.info(rel[5])
                 
                 if rel[8] and rel[8] != 'Nenhuma':
-                    st.write("**Ocorrências:**")
+                    st.write("**OcorrÃªncias:**")
                     st.warning(rel[8])
                 
-                # Botões de ação
+                # BotÃµes de aÃ§Ã£o
                 col_btn1, col_btn2, col_btn3 = st.columns(3)
                 with col_btn1:
-                    if st.button("📄 Gerar PDF", key=f"pdf_{rel[0]}"):
+                    if st.button("ðŸ“„ Gerar PDF", key=f"pdf_{rel[0]}"):
                         pdf = gerar_relatorio_pdf(rel[0])
                         if pdf:
                             st.download_button(
-                                label="⬇️ Baixar PDF",
+                                label="â¬‡ï¸ Baixar PDF",
                                 data=pdf,
                                 file_name=f"relatorio_{rel[1]}_{rel[0]}.pdf",
                                 mime="application/pdf",
@@ -1099,28 +1094,28 @@ def exibir_dashboard(usuario):
                             )
                 
                 with col_btn2:
-                    if st.button("📸 Ver Fotos", key=f"fotos_{rel[0]}"):
+                    if st.button("ðŸ“¸ Ver Fotos", key=f"fotos_{rel[0]}"):
                         st.session_state.ver_fotos_relatorio = rel[0]
                         st.rerun()
                 
                 with col_btn3:
-                    if st.button("📱 Enviar WhatsApp", key=f"whatsapp_{rel[0]}"):
+                    if st.button("ðŸ“± Enviar WhatsApp", key=f"whatsapp_{rel[0]}"):
                         projeto_nome = rel[14]
-                        mensagem = f"Relatório {rel[1]} - {projeto_nome}\nStatus: {rel[11]}\nProdutividade: {rel[12]}%"
+                        mensagem = f"RelatÃ³rio {rel[1]} - {projeto_nome}\nStatus: {rel[11]}\nProdutividade: {rel[12]}%"
                         enviar_whatsapp_alerta(filtros['projeto_id'], 'info', mensagem)
                         st.success("Mensagem enviada para WhatsApp!")
     else:
-        st.info("Nenhum relatório encontrado para o período selecionado.")
+        st.info("Nenhum relatÃ³rio encontrado para o perÃ­odo selecionado.")
 
 def exibir_formulario_relatorio(usuario):
-    """Exibe o formulário para registrar relatório diário"""
-    st.markdown('<h2 class="sub-header">📝 Registrar Relatório Diário</h2>', unsafe_allow_html=True)
+    """Exibe o formulÃ¡rio para registrar relatÃ³rio diÃ¡rio"""
+    st.markdown('<h2 class="sub-header">ðŸ“ Registrar RelatÃ³rio DiÃ¡rio</h2>', unsafe_allow_html=True)
     
     with st.form("form_relatorio_detalhado", clear_on_submit=True):
         col1, col2 = st.columns(2)
         
         with col1:
-            data_relatorio = st.date_input("Data do relatório", value=date.today())
+            data_relatorio = st.date_input("Data do relatÃ³rio", value=date.today())
             projetos = obter_projetos()
             projeto_opcoes = {p[0]: p[1] for p in projetos}
             projeto_id = st.selectbox(
@@ -1128,17 +1123,17 @@ def exibir_formulario_relatorio(usuario):
                 list(projeto_opcoes.keys()),
                 format_func=lambda x: projeto_opcoes[x]
             )
-            temperatura = st.text_input("Condições climáticas", 
-                                       placeholder="Ex: Céu parcialmente nublado com períodos de chuva")
+            temperatura = st.text_input("CondiÃ§Ãµes climÃ¡ticas", 
+                                       placeholder="Ex: CÃ©u parcialmente nublado com perÃ­odos de chuva")
             status = st.selectbox("Status do dia", 
-                                 ["Concluído", "Em andamento", "Atrasado", "Paralisado"])
+                                 ["ConcluÃ­do", "Em andamento", "Atrasado", "Paralisado"])
             produtividade = st.slider("Produtividade (%)", 0, 100, 85, 
-                                     help="Avaliação da produtividade do dia")
+                                     help="AvaliaÃ§Ã£o da produtividade do dia")
         
         with col2:
-            mestre = st.number_input("Nº de Mestres", min_value=0, value=1)
-            motoristas = st.number_input("Nº de Motoristas", min_value=0, value=1)
-            subordinados = st.number_input("Nº de Subordinados", min_value=0, value=6)
+            mestre = st.number_input("NÂº de Mestres", min_value=0, value=1)
+            motoristas = st.number_input("NÂº de Motoristas", min_value=0, value=1)
+            subordinados = st.number_input("NÂº de Subordinados", min_value=0, value=6)
             encarregado = st.checkbox("Encarregado presente", value=True)
             fiscal = st.checkbox("Fiscal presente", value=True)
             
@@ -1153,7 +1148,7 @@ def exibir_formulario_relatorio(usuario):
         st.subheader("Atividades Realizadas")
         atividades = st.text_area(
             "Descreva detalhadamente as atividades realizadas:",
-            placeholder="Ex: Produção de betão classe B25 com traço (1;2;3), betonagem das sapatas...",
+            placeholder="Ex: ProduÃ§Ã£o de betÃ£o classe B25 com traÃ§o (1;2;3), betonagem das sapatas...",
             height=120
         )
         
@@ -1161,20 +1156,20 @@ def exibir_formulario_relatorio(usuario):
         st.subheader("Equipamentos Utilizados")
         equipamentos = st.text_area(
             "Equipamentos utilizados:",
-            placeholder="Ex: Betoneira, caminhão betoneira, vibrador de concreto...",
+            placeholder="Ex: Betoneira, caminhÃ£o betoneira, vibrador de concreto...",
             height=80
         )
         
-        # Ocorrências
-        st.subheader("Ocorrências do Dia")
+        # OcorrÃªncias
+        st.subheader("OcorrÃªncias do Dia")
         ocorrencias = st.text_area(
-            "Descreva as ocorrências (positivas ou negativas):",
+            "Descreva as ocorrÃªncias (positivas ou negativas):",
             placeholder="Ex: Avaria da betoneira, entrada de areia grossa, descarregamento de materiais...",
             height=100
         )
         
         # Acidentes
-        st.subheader("Segurança do Trabalho")
+        st.subheader("SeguranÃ§a do Trabalho")
         ocorreu_acidente = st.checkbox("Ocorreu acidente?")
         acidentes = "Nenhum"
         if ocorreu_acidente:
@@ -1184,19 +1179,19 @@ def exibir_formulario_relatorio(usuario):
                 height=100
             )
         
-        # Plano para amanhã
-        st.subheader("Plano para o Próximo Dia")
+        # Plano para amanhÃ£
+        st.subheader("Plano para o PrÃ³ximo Dia")
         plano_amanha = st.text_area(
-            "Atividades planejadas para amanhã:",
-            placeholder="Ex: Produção e lançamento de betão de limpeza, verificação de nível...",
+            "Atividades planejadas para amanhÃ£:",
+            placeholder="Ex: ProduÃ§Ã£o e lanÃ§amento de betÃ£o de limpeza, verificaÃ§Ã£o de nÃ­vel...",
             height=100
         )
         
-        # Observações adicionais
-        observacoes = st.text_area("Observações adicionais:", height=80)
+        # ObservaÃ§Ãµes adicionais
+        observacoes = st.text_area("ObservaÃ§Ãµes adicionais:", height=80)
         
         # Upload de fotos
-        st.subheader("📸 Anexar Fotos do Dia")
+        st.subheader("ðŸ“¸ Anexar Fotos do Dia")
         fotos = st.file_uploader("Selecione fotos da obra", 
                                 type=['jpg', 'jpeg', 'png'],
                                 accept_multiple_files=True)
@@ -1209,17 +1204,17 @@ def exibir_formulario_relatorio(usuario):
                 with col_foto1:
                     st.image(foto, caption=f"Foto {i+1}", width=150)
                 with col_foto2:
-                    descricao = st.text_input(f"Descrição da foto {i+1}", 
+                    descricao = st.text_input(f"DescriÃ§Ã£o da foto {i+1}", 
                                             key=f"desc_{i}")
                     descricoes_fotos.append(descricao)
         
-        submitted = st.form_submit_button("💾 Salvar Relatório")
+        submitted = st.form_submit_button("ðŸ’¾ Salvar RelatÃ³rio")
         
         if submitted:
             if not atividades:
                 st.error("Por favor, descreva as atividades realizadas.")
             else:
-                # Salvar relatório
+                # Salvar relatÃ³rio
                 dados = {
                     'temperatura': temperatura,
                     'atividades': atividades,
@@ -1238,21 +1233,21 @@ def exibir_formulario_relatorio(usuario):
                 )
                 
                 if relatorio_id:
-                    st.success(f"✅ Relatório salvo com sucesso! ID: {relatorio_id}")
+                    st.success(f"âœ… RelatÃ³rio salvo com sucesso! ID: {relatorio_id}")
                     
                     # Salvar fotos
                     if fotos:
                         for i, foto in enumerate(fotos):
                             salvar_foto(relatorio_id, foto.getvalue(), 
                                        descricoes_fotos[i] if i < len(descricoes_fotos) else "")
-                        st.success(f"✅ {len(fotos)} foto(s) salva(s)")
+                        st.success(f"âœ… {len(fotos)} foto(s) salva(s)")
                     
                     # Gerar PDF automaticamente
                     with st.spinner("Gerando PDF..."):
                         pdf = gerar_relatorio_pdf(relatorio_id)
                         if pdf:
                             st.download_button(
-                                label="⬇️ Baixar Relatório em PDF",
+                                label="â¬‡ï¸ Baixar RelatÃ³rio em PDF",
                                 data=pdf,
                                 file_name=f"relatorio_{data_relatorio}.pdf",
                                 mime="application/pdf",
@@ -1262,16 +1257,16 @@ def exibir_formulario_relatorio(usuario):
 
 def exibir_galeria_fotos():
     """Exibe a galeria de fotos da obra"""
-    st.markdown('<h2 class="sub-header">📸 Galeria de Fotos da Obra</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="sub-header">ðŸ“¸ Galeria de Fotos da Obra</h2>', unsafe_allow_html=True)
     
     filtros = st.session_state.filtros
     
-    # Verificar se estamos visualizando fotos de um relatório específico
+    # Verificar se estamos visualizando fotos de um relatÃ³rio especÃ­fico
     if 'ver_fotos_relatorio' in st.session_state:
         relatorio_id = st.session_state.ver_fotos_relatorio
         fotos = obter_fotos(relatorio_id)
         
-        st.subheader(f"Fotos do Relatório {relatorio_id}")
+        st.subheader(f"Fotos do RelatÃ³rio {relatorio_id}")
         
         if fotos:
             cols = st.columns(3)
@@ -1284,26 +1279,26 @@ def exibir_galeria_fotos():
                             st.image(img_bytes, caption=foto[3] or f"Foto {idx+1}")
                             st.caption(f"Upload: {foto[4]}")
                         else:
-                            st.warning(f"Arquivo não encontrado: {foto[2]}")
+                            st.warning(f"Arquivo nÃ£o encontrado: {foto[2]}")
                     except Exception as e:
                         st.error(f"Erro ao carregar foto: {str(e)}")
         else:
-            st.info("Nenhuma foto encontrada para este relatório.")
+            st.info("Nenhuma foto encontrada para este relatÃ³rio.")
         
-        if st.button("← Voltar para Galeria Geral"):
+        if st.button("â† Voltar para Galeria Geral"):
             del st.session_state.ver_fotos_relatorio
             st.rerun()
         
         return
     
     # Galeria geral
-    # Obter relatórios com fotos
+    # Obter relatÃ³rios com fotos
     relatorios = obter_relatorios(filtros['projeto_id'], 
                                  filtros['data_inicio'], 
                                  filtros['data_fim'])
     
     if not relatorios:
-        st.info("Nenhum relatório encontrado.")
+        st.info("Nenhum relatÃ³rio encontrado.")
         return
     
     # Organizar fotos por data
@@ -1318,12 +1313,12 @@ def exibir_galeria_fotos():
             }
     
     if not fotos_por_data:
-        st.info("Nenhuma foto encontrada para o período selecionado.")
+        st.info("Nenhuma foto encontrada para o perÃ­odo selecionado.")
         return
     
     # Exibir fotos
     for data_str, dados in sorted(fotos_por_data.items(), reverse=True):
-        with st.expander(f"📅 {data_str} - {len(dados['fotos'])} foto(s)"):
+        with st.expander(f"ðŸ“… {data_str} - {len(dados['fotos'])} foto(s)"):
             st.write(f"**Atividades:** {dados['relatorio'][5][:100]}...")
             
             cols = st.columns(4)
@@ -1335,7 +1330,7 @@ def exibir_galeria_fotos():
                                 img_bytes = f.read()
                             st.image(img_bytes, use_column_width=True)
                         else:
-                            st.warning("Arquivo não encontrado")
+                            st.warning("Arquivo nÃ£o encontrado")
                     except:
                         st.error("Erro ao carregar imagem")
             
@@ -1344,30 +1339,30 @@ def exibir_galeria_fotos():
             
             col1, col2 = st.columns(2)
             with col1:
-                if st.button("👁️ Ver Todas", key=f"ver_todas_{data_str}"):
+                if st.button("ðŸ‘ï¸ Ver Todas", key=f"ver_todas_{data_str}"):
                     st.session_state.ver_fotos_relatorio = dados['relatorio'][0]
                     st.rerun()
             with col2:
-                # Opção para baixar fotos
-                if st.button("📥 Baixar Fotos", key=f"baixar_{data_str}"):
+                # OpÃ§Ã£o para baixar fotos
+                if st.button("ðŸ“¥ Baixar Fotos", key=f"baixar_{data_str}"):
                     st.info("Funcionalidade de download em desenvolvimento")
 
 def exibir_alertas():
     """Exibe os alertas do sistema"""
-    st.markdown('<h2 class="sub-header">🚨 Sistema de Alertas</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="sub-header">ðŸš¨ Sistema de Alertas</h2>', unsafe_allow_html=True)
     
     filtros = st.session_state.filtros
     
     # Criar novo alerta (apenas para admin/fiscal)
     usuario = st.session_state.usuario
     if usuario['tipo'] in ['admin', 'fiscal']:
-        with st.expander("➕ Criar Novo Alerta"):
+        with st.expander("âž• Criar Novo Alerta"):
             col1, col2 = st.columns(2)
             with col1:
                 tipo = st.selectbox("Tipo de Alerta", 
                                    ["info", "aviso", "emergencia", "financeiro"])
             with col2:
-                prioridade = st.select_slider("Prioridade", ["Baixa", "Média", "Alta", "Crítica"])
+                prioridade = st.select_slider("Prioridade", ["Baixa", "MÃ©dia", "Alta", "CrÃ­tica"])
             
             mensagem = st.text_area("Mensagem do Alerta", height=100)
             
@@ -1375,7 +1370,7 @@ def exibir_alertas():
                 if mensagem:
                     criar_alerta(filtros['projeto_id'], tipo, f"[{prioridade}] {mensagem}")
                     st.success("Alerta criado com sucesso!")
-                    # Enviar notificações
+                    # Enviar notificaÃ§Ãµes
                     enviar_email_alerta(filtros['projeto_id'], tipo, mensagem)
                     enviar_whatsapp_alerta(filtros['projeto_id'], tipo, mensagem)
                     st.rerun()
@@ -1387,13 +1382,13 @@ def exibir_alertas():
         st.info("Nenhum alerta encontrado.")
         return
     
-    # Separar alertas não lidos
+    # Separar alertas nÃ£o lidos
     alertas_nao_lidos = [a for a in alertas if a[5] == 0]
     alertas_lidos = [a for a in alertas if a[5] == 1]
     
-    # Alertas não lidos
+    # Alertas nÃ£o lidos
     if alertas_nao_lidos:
-        st.subheader("⚠️ Alertas Não Lidos")
+        st.subheader("âš ï¸ Alertas NÃ£o Lidos")
         for alerta in alertas_nao_lidos:
             cor = {
                 'emergencia': '#EF4444',
@@ -1416,88 +1411,88 @@ def exibir_alertas():
             
             col1, col2, col3 = st.columns([1, 1, 2])
             with col1:
-                if st.button("✅ Marcar como Lido", key=f"ler_{alerta[0]}"):
+                if st.button("âœ… Marcar como Lido", key=f"ler_{alerta[0]}"):
                     marcar_alerta_como_lido(alerta[0])
                     st.rerun()
             with col2:
-                if st.button("📱 Enviar WhatsApp", key=f"whats_{alerta[0]}"):
+                if st.button("ðŸ“± Enviar WhatsApp", key=f"whats_{alerta[0]}"):
                     enviar_whatsapp_alerta(filtros['projeto_id'], alerta[2], alerta[3])
-                    st.success("Notificação enviada!")
+                    st.success("NotificaÃ§Ã£o enviada!")
             with col3:
-                st.write("")  # Espaço vazio
+                st.write("")  # EspaÃ§o vazio
     
     # Alertas lidos
     if alertas_lidos:
-        with st.expander("📚 Alertas Lidos"):
+        with st.expander("ðŸ“š Alertas Lidos"):
             for alerta in alertas_lidos:
                 st.info(f"**{alerta[2].upper()}** - {alerta[4]}\n{alerta[3]}")
 
 def exibir_gerenciamento_usuarios():
-    """Exibe a interface de gerenciamento de usuários"""
-    st.markdown('<h2 class="sub-header">👥 Gerenciamento de Usuários</h2>', unsafe_allow_html=True)
+    """Exibe a interface de gerenciamento de usuÃ¡rios"""
+    st.markdown('<h2 class="sub-header">ðŸ‘¥ Gerenciamento de UsuÃ¡rios</h2>', unsafe_allow_html=True)
     
     # Abas para diferentes funcionalidades
-    tab1, tab2, tab3 = st.tabs(["Lista de Usuários", "Criar Novo Usuário", "Estatísticas"])
+    tab1, tab2, tab3 = st.tabs(["Lista de UsuÃ¡rios", "Criar Novo UsuÃ¡rio", "EstatÃ­sticas"])
     
     with tab1:
-        # Listar usuários
+        # Listar usuÃ¡rios
         c = conn.cursor()
         c.execute('SELECT id, username, nome, email, tipo, telefone, ativo FROM usuarios')
         usuarios = c.fetchall()
         
         if usuarios:
             df = pd.DataFrame(usuarios, 
-                            columns=['ID', 'Usuário', 'Nome', 'Email', 'Tipo', 'Telefone', 'Ativo'])
+                            columns=['ID', 'UsuÃ¡rio', 'Nome', 'Email', 'Tipo', 'Telefone', 'Ativo'])
             st.dataframe(df, use_container_width=True)
         else:
-            st.info("Nenhum usuário cadastrado.")
+            st.info("Nenhum usuÃ¡rio cadastrado.")
     
     with tab2:
-        # Formulário para criar novo usuário
+        # FormulÃ¡rio para criar novo usuÃ¡rio
         with st.form("form_novo_usuario"):
             col1, col2 = st.columns(2)
             
             with col1:
-                username = st.text_input("Nome de usuário*")
+                username = st.text_input("Nome de usuÃ¡rio*")
                 nome = st.text_input("Nome completo*")
                 email = st.text_input("Email*")
             
             with col2:
-                tipo = st.selectbox("Tipo de usuário*", 
+                tipo = st.selectbox("Tipo de usuÃ¡rio*", 
                                    ['fiscal', 'proprietario', 'financeiro', 'admin'])
                 telefone = st.text_input("Telefone")
                 senha = st.text_input("Senha*", type="password")
                 confirmar_senha = st.text_input("Confirmar senha*", type="password")
             
-            st.caption("* Campos obrigatórios")
+            st.caption("* Campos obrigatÃ³rios")
             
-            if st.form_submit_button("Criar Usuário"):
+            if st.form_submit_button("Criar UsuÃ¡rio"):
                 if not all([username, nome, email, senha]):
-                    st.error("Preencha todos os campos obrigatórios.")
+                    st.error("Preencha todos os campos obrigatÃ³rios.")
                 elif senha != confirmar_senha:
-                    st.error("As senhas não coincidem.")
+                    st.error("As senhas nÃ£o coincidem.")
                 else:
                     sucesso = criar_usuario(username, nome, email, senha, tipo, telefone)
                     if sucesso:
-                        st.success(f"Usuário {username} criado com sucesso!")
+                        st.success(f"UsuÃ¡rio {username} criado com sucesso!")
                         st.rerun()
                     else:
-                        st.error("Erro ao criar usuário. Verifique se o usuário já existe.")
+                        st.error("Erro ao criar usuÃ¡rio. Verifique se o usuÃ¡rio jÃ¡ existe.")
     
     with tab3:
-        # Estatísticas de uso
-        st.subheader("Estatísticas de Uso")
+        # EstatÃ­sticas de uso
+        st.subheader("EstatÃ­sticas de Uso")
         
         c = conn.cursor()
         
-        # Total de usuários por tipo
+        # Total de usuÃ¡rios por tipo
         c.execute('SELECT tipo, COUNT(*) FROM usuarios GROUP BY tipo')
         tipos = c.fetchall()
         
         if tipos:
             df_tipos = pd.DataFrame(tipos, columns=['Tipo', 'Quantidade'])
             fig = px.pie(df_tipos, values='Quantidade', names='Tipo', 
-                        title='Distribuição de Usuários por Tipo')
+                        title='DistribuiÃ§Ã£o de UsuÃ¡rios por Tipo')
             st.plotly_chart(fig, use_container_width=True)
         
         # Atividade recente
@@ -1512,12 +1507,12 @@ def exibir_gerenciamento_usuarios():
         atividade = c.fetchall()
         
         if atividade:
-            df_atividade = pd.DataFrame(atividade, columns=['Usuário', 'Relatórios'])
+            df_atividade = pd.DataFrame(atividade, columns=['UsuÃ¡rio', 'RelatÃ³rios'])
             st.dataframe(df_atividade, use_container_width=True)
 
 def exibir_gerenciamento_projetos():
     """Exibe a interface de gerenciamento de projetos"""
-    st.markdown('<h2 class="sub-header">🏗️ Gerenciamento de Projetos</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="sub-header">ðŸ—ï¸ Gerenciamento de Projetos</h2>', unsafe_allow_html=True)
     
     tab1, tab2, tab3 = st.tabs(["Lista de Projetos", "Criar Novo Projeto", "Detalhes"])
     
@@ -1526,16 +1521,16 @@ def exibir_gerenciamento_projetos():
         
         if projetos:
             df = pd.DataFrame(projetos, 
-                            columns=['ID', 'Nome', 'Descrição', 'Localização', 'Orçamento', 
-                                    'Início', 'Fim Previsto', 'Status', 'Responsável ID', 
-                                    'Responsável Nome'])
+                            columns=['ID', 'Nome', 'DescriÃ§Ã£o', 'LocalizaÃ§Ã£o', 'OrÃ§amento', 
+                                    'InÃ­cio', 'Fim Previsto', 'Status', 'ResponsÃ¡vel ID', 
+                                    'ResponsÃ¡vel Nome'])
             
             # Formatar colunas
-            df['Orçamento'] = df['Orçamento'].apply(lambda x: f"MZN {x:,.2f}")
-            df['Início'] = pd.to_datetime(df['Início']).dt.strftime('%d/%m/%Y')
+            df['OrÃ§amento'] = df['OrÃ§amento'].apply(lambda x: f"MZN {x:,.2f}")
+            df['InÃ­cio'] = pd.to_datetime(df['InÃ­cio']).dt.strftime('%d/%m/%Y')
             df['Fim Previsto'] = pd.to_datetime(df['Fim Previsto']).dt.strftime('%d/%m/%Y')
             
-            st.dataframe(df[['ID', 'Nome', 'Localização', 'Orçamento', 'Início', 'Status', 'Responsável Nome']], 
+            st.dataframe(df[['ID', 'Nome', 'LocalizaÃ§Ã£o', 'OrÃ§amento', 'InÃ­cio', 'Status', 'ResponsÃ¡vel Nome']], 
                         use_container_width=True)
         else:
             st.info("Nenhum projeto cadastrado.")
@@ -1543,30 +1538,30 @@ def exibir_gerenciamento_projetos():
     with tab2:
         with st.form("form_novo_projeto"):
             nome = st.text_input("Nome do Projeto*")
-            descricao = st.text_area("Descrição")
-            localizacao = st.text_input("Localização*")
-            orcamento = st.number_input("Orçamento Total (MZN)*", min_value=0.0, step=1000.0)
+            descricao = st.text_area("DescriÃ§Ã£o")
+            localizacao = st.text_input("LocalizaÃ§Ã£o*")
+            orcamento = st.number_input("OrÃ§amento Total (MZN)*", min_value=0.0, step=1000.0)
             
             col1, col2 = st.columns(2)
             with col1:
-                data_inicio = st.date_input("Data de Início*", value=date.today())
+                data_inicio = st.date_input("Data de InÃ­cio*", value=date.today())
             with col2:
-                data_fim = st.date_input("Data Prevista de Término*", 
+                data_fim = st.date_input("Data Prevista de TÃ©rmino*", 
                                         value=date.today() + timedelta(days=180))
             
-            # Selecionar responsável
+            # Selecionar responsÃ¡vel
             c = conn.cursor()
             c.execute("SELECT id, nome FROM usuarios WHERE tipo IN ('admin', 'fiscal')")
             responsaveis = c.fetchall()
             responsavel_opcoes = {r[0]: r[1] for r in responsaveis}
             
-            responsavel_id = st.selectbox("Responsável*", 
+            responsavel_id = st.selectbox("ResponsÃ¡vel*", 
                                          list(responsavel_opcoes.keys()),
                                          format_func=lambda x: responsavel_opcoes[x])
             
             if st.form_submit_button("Criar Projeto"):
                 if not all([nome, localizacao, orcamento]):
-                    st.error("Preencha todos os campos obrigatórios.")
+                    st.error("Preencha todos os campos obrigatÃ³rios.")
                 else:
                     projeto_id = criar_projeto(nome, descricao, localizacao, orcamento,
                                               data_inicio, data_fim, responsavel_id)
@@ -1586,14 +1581,14 @@ def exibir_gerenciamento_projetos():
             
             with col1:
                 st.metric("Nome do Projeto", projeto[1])
-                st.write(f"**Descrição:** {projeto[2]}")
-                st.write(f"**Localização:** {projeto[3]}")
-                st.write(f"**Responsável:** {projeto[9]}")
+                st.write(f"**DescriÃ§Ã£o:** {projeto[2]}")
+                st.write(f"**LocalizaÃ§Ã£o:** {projeto[3]}")
+                st.write(f"**ResponsÃ¡vel:** {projeto[9]}")
             
             with col2:
-                st.metric("Orçamento", f"MZN {projeto[4]:,.2f}")
-                st.write(f"**Início:** {projeto[5]}")
-                st.write(f"**Término Previsto:** {projeto[6]}")
+                st.metric("OrÃ§amento", f"MZN {projeto[4]:,.2f}")
+                st.write(f"**InÃ­cio:** {projeto[5]}")
+                st.write(f"**TÃ©rmino Previsto:** {projeto[6]}")
                 st.write(f"**Status:** {projeto[7]}")
             
             # Progresso do projeto
@@ -1622,51 +1617,51 @@ def exibir_gerenciamento_projetos():
                     
                     st.progress(progresso / 100)
             except:
-                st.warning("Não foi possível calcular o progresso do projeto")
+                st.warning("NÃ£o foi possÃ­vel calcular o progresso do projeto")
 
 def exibir_relatorios_avancados():
-    """Exibe relatórios avançados e análises"""
-    st.markdown('<h2 class="sub-header">📈 Relatórios Avançados</h2>', unsafe_allow_html=True)
+    """Exibe relatÃ³rios avanÃ§ados e anÃ¡lises"""
+    st.markdown('<h2 class="sub-header">ðŸ“ˆ RelatÃ³rios AvanÃ§ados</h2>', unsafe_allow_html=True)
     
     filtros = st.session_state.filtros
     
-    tab1, tab2, tab3, tab4 = st.tabs(["Relatório Mensal", "Análise de Produtividade", 
-                                      "Relatório de Segurança", "Exportar Dados"])
+    tab1, tab2, tab3, tab4 = st.tabs(["RelatÃ³rio Mensal", "AnÃ¡lise de Produtividade", 
+                                      "RelatÃ³rio de SeguranÃ§a", "Exportar Dados"])
     
     with tab1:
-        # Relatório mensal
-        st.subheader("Relatório Mensal")
+        # RelatÃ³rio mensal
+        st.subheader("RelatÃ³rio Mensal")
         
         col1, col2 = st.columns(2)
         with col1:
             ano = st.number_input("Ano", min_value=2020, max_value=2030, value=date.today().year)
         with col2:
-            mes = st.number_input("Mês", min_value=1, max_value=12, value=date.today().month)
+            mes = st.number_input("MÃªs", min_value=1, max_value=12, value=date.today().month)
         
-        if st.button("Gerar Relatório Mensal"):
-            with st.spinner("Gerando relatório..."):
+        if st.button("Gerar RelatÃ³rio Mensal"):
+            with st.spinner("Gerando relatÃ³rio..."):
                 pdf = gerar_relatorio_mensal_pdf(filtros['projeto_id'], mes, ano)
                 if pdf:
                     st.download_button(
-                        label="⬇️ Baixar Relatório Mensal PDF",
+                        label="â¬‡ï¸ Baixar RelatÃ³rio Mensal PDF",
                         data=pdf,
                         file_name=f"relatorio_mensal_{mes:02d}_{ano}.pdf",
                         mime="application/pdf",
                         key="download_relatorio_mensal"
                     )
                 else:
-                    st.error("Erro ao gerar relatório.")
+                    st.error("Erro ao gerar relatÃ³rio.")
     
     with tab2:
-        # Análise de produtividade
-        st.subheader("Análise de Produtividade")
+        # AnÃ¡lise de produtividade
+        st.subheader("AnÃ¡lise de Produtividade")
         
         relatorios = obter_relatorios(filtros['projeto_id'], 
                                      filtros['data_inicio'], 
                                      filtros['data_fim'])
         
         if relatorios:
-            # Criar DataFrame com índices corrigidos
+            # Criar DataFrame com Ã­ndices corrigidos
             data_list = []
             for rel in relatorios:
                 data_list.append({
@@ -1690,7 +1685,7 @@ def exibir_relatorios_avancados():
             
             df = pd.DataFrame(data_list)
             
-            # Análise por dia da semana
+            # AnÃ¡lise por dia da semana
             df['data'] = pd.to_datetime(df['data'])
             df['dia_semana'] = df['data'].dt.day_name()
             df['mes'] = df['data'].dt.month
@@ -1703,21 +1698,21 @@ def exibir_relatorios_avancados():
                         title='Produtividade por Dia da Semana')
             st.plotly_chart(fig, use_container_width=True)
             
-            # Correlação com condições climáticas
-            st.subheader("Produtividade vs Condições Climáticas")
+            # CorrelaÃ§Ã£o com condiÃ§Ãµes climÃ¡ticas
+            st.subheader("Produtividade vs CondiÃ§Ãµes ClimÃ¡ticas")
             
             # Agrupar por temperatura (simplificado)
             if len(df['temperatura'].unique()) < 10:  # Evitar muitos grupos
                 df_clima = df.groupby('temperatura')['produtividade'].mean().reset_index()
                 fig2 = px.bar(df_clima, x='temperatura', y='produtividade',
-                             title='Produtividade Média por Condição Climática')
+                             title='Produtividade MÃ©dia por CondiÃ§Ã£o ClimÃ¡tica')
                 st.plotly_chart(fig2, use_container_width=True)
         else:
-            st.info("Nenhum relatório encontrado para análise.")
+            st.info("Nenhum relatÃ³rio encontrado para anÃ¡lise.")
     
     with tab3:
-        # Relatório de segurança
-        st.subheader("Relatório de Segurança do Trabalho")
+        # RelatÃ³rio de seguranÃ§a
+        st.subheader("RelatÃ³rio de SeguranÃ§a do Trabalho")
         
         relatorios = obter_relatorios(filtros['projeto_id'], 
                                      filtros['data_inicio'], 
@@ -1742,31 +1737,31 @@ def exibir_relatorios_avancados():
                 for rel in relatorios:
                     if rel[9] != 'Nenhum':
                         with st.expander(f"Acidente em {rel[1]}"):
-                            st.write(f"**Descrição:** {rel[9]}")
-                            st.write(f"**Responsável:** {rel[15]}")  # usuario_nome
+                            st.write(f"**DescriÃ§Ã£o:** {rel[9]}")
+                            st.write(f"**ResponsÃ¡vel:** {rel[15]}")  # usuario_nome
                             st.write(f"**Atividades do dia:** {rel[5]}")
         else:
-            st.info("Nenhum relatório encontrado.")
+            st.info("Nenhum relatÃ³rio encontrado.")
     
     with tab4:
         # Exportar dados
         st.subheader("Exportar Dados")
         
-        formato = st.selectbox("Formato de exportação", 
+        formato = st.selectbox("Formato de exportaÃ§Ã£o", 
                               ["CSV", "Excel", "JSON"])
         
         # Selecionar dados para exportar
         opcoes_dados = st.multiselect(
             "Selecione os dados para exportar",
-            ["Relatórios Diários", "Projetos", "Usuários", "Fotos (metadados)", "Alertas"],
-            default=["Relatórios Diários"]
+            ["RelatÃ³rios DiÃ¡rios", "Projetos", "UsuÃ¡rios", "Fotos (metadados)", "Alertas"],
+            default=["RelatÃ³rios DiÃ¡rios"]
         )
         
         if st.button("Exportar Dados"):
-            with st.spinner("Preparando exportação..."):
+            with st.spinner("Preparando exportaÃ§Ã£o..."):
                 dados_exportar = {}
                 
-                if "Relatórios Diários" in opcoes_dados:
+                if "RelatÃ³rios DiÃ¡rios" in opcoes_dados:
                     relatorios = obter_relatorios(filtros['projeto_id'], 
                                                  filtros['data_inicio'], 
                                                  filtros['data_fim'])
@@ -1788,7 +1783,7 @@ def exibir_relatorios_avancados():
                         df_projetos = pd.DataFrame(projetos, columns=colunas)
                         dados_exportar['projetos'] = df_projetos
                 
-                if "Usuários" in opcoes_dados:
+                if "UsuÃ¡rios" in opcoes_dados:
                     c = conn.cursor()
                     c.execute('SELECT * FROM usuarios')
                     usuarios = c.fetchall()
@@ -1798,7 +1793,7 @@ def exibir_relatorios_avancados():
                         df_usuarios = pd.DataFrame(usuarios, columns=colunas)
                         dados_exportar['usuarios'] = df_usuarios
                 
-                # Criar arquivo único com múltiplas abas (para Excel)
+                # Criar arquivo Ãºnico com mÃºltiplas abas (para Excel)
                 if formato == "Excel" and dados_exportar:
                     buffer = io.BytesIO()
                     with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
@@ -1807,7 +1802,7 @@ def exibir_relatorios_avancados():
                     buffer.seek(0)
                     
                     st.download_button(
-                        label="⬇️ Baixar Excel",
+                        label="â¬‡ï¸ Baixar Excel",
                         data=buffer,
                         file_name=f"export_obra_{date.today()}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -1815,7 +1810,7 @@ def exibir_relatorios_avancados():
                     )
                 
                 elif formato == "CSV" and dados_exportar:
-                    # Para múltiplos CSVs, criar um ZIP
+                    # Para mÃºltiplos CSVs, criar um ZIP
                     import zipfile
                     
                     buffer = io.BytesIO()
@@ -1827,7 +1822,7 @@ def exibir_relatorios_avancados():
                     buffer.seek(0)
                     
                     st.download_button(
-                        label="⬇️ Baixar ZIP com CSVs",
+                        label="â¬‡ï¸ Baixar ZIP com CSVs",
                         data=buffer,
                         file_name=f"export_obra_{date.today()}.zip",
                         mime="application/zip",
@@ -1842,7 +1837,7 @@ def exibir_relatorios_avancados():
                     json_str = json.dumps(dados_json, indent=2, default=str)
                     
                     st.download_button(
-                        label="⬇️ Baixar JSON",
+                        label="â¬‡ï¸ Baixar JSON",
                         data=json_str,
                         file_name=f"export_obra_{date.today()}.json",
                         mime="application/json",
@@ -1853,28 +1848,28 @@ def exibir_relatorios_avancados():
 
 def exibir_controle_financeiro():
     """Exibe o controle financeiro"""
-    st.markdown('<h2 class="sub-header">💰 Controle Financeiro</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="sub-header">ðŸ’° Controle Financeiro</h2>', unsafe_allow_html=True)
     
     filtros = st.session_state.filtros
     
-    tab1, tab2, tab3 = st.tabs(["Lançar Custos", "Análise Financeira", "Orçamento vs Realizado"])
+    tab1, tab2, tab3 = st.tabs(["LanÃ§ar Custos", "AnÃ¡lise Financeira", "OrÃ§amento vs Realizado"])
     
     with tab1:
-        # Formulário para lançar custos
+        # FormulÃ¡rio para lanÃ§ar custos
         with st.form("form_custo"):
             categoria = st.selectbox("Categoria", 
-                                    ["Materiais", "Mão de Obra", "Equipamentos", 
-                                     "Transporte", "Serviços", "Imprevistos"])
-            descricao = st.text_input("Descrição do custo*")
+                                    ["Materiais", "MÃ£o de Obra", "Equipamentos", 
+                                     "Transporte", "ServiÃ§os", "Imprevistos"])
+            descricao = st.text_input("DescriÃ§Ã£o do custo*")
             valor = st.number_input("Valor (MZN)*", min_value=0.0, step=100.0)
             data_custo = st.date_input("Data", value=date.today())
             
             comprovante = st.file_uploader("Comprovante (opcional)", 
                                           type=['pdf', 'jpg', 'png'])
             
-            if st.form_submit_button("Lançar Custo"):
+            if st.form_submit_button("LanÃ§ar Custo"):
                 if not descricao or valor <= 0:
-                    st.error("Preencha a descrição e valor corretamente.")
+                    st.error("Preencha a descriÃ§Ã£o e valor corretamente.")
                 else:
                     try:
                         c = conn.cursor()
@@ -1895,19 +1890,19 @@ def exibir_controle_financeiro():
                         ''', (filtros['projeto_id'], categoria, descricao, valor, data_custo, comprovante_path))
                         
                         conn.commit()
-                        st.success(f"Custo de MZN {valor:,.2f} lançado com sucesso!")
+                        st.success(f"Custo de MZN {valor:,.2f} lanÃ§ado com sucesso!")
                         
                         # Criar alerta para custos altos
                         if valor > 10000:
                             criar_alerta(filtros['projeto_id'], 'financeiro',
-                                        f"Custo alto lançado: {descricao} - MZN {valor:,.2f}")
+                                        f"Custo alto lanÃ§ado: {descricao} - MZN {valor:,.2f}")
                         st.rerun()
                     
                     except Exception as e:
-                        st.error(f"Erro ao lançar custo: {str(e)}")
+                        st.error(f"Erro ao lanÃ§ar custo: {str(e)}")
     
     with tab2:
-        # Análise financeira
+        # AnÃ¡lise financeira
         c = conn.cursor()
         c.execute('''
             SELECT categoria, SUM(valor) as total 
@@ -1921,9 +1916,9 @@ def exibir_controle_financeiro():
         if custos:
             df_custos = pd.DataFrame(custos, columns=['Categoria', 'Total'])
             
-            # Gráfico de pizza
+            # GrÃ¡fico de pizza
             fig = px.pie(df_custos, values='Total', names='Categoria',
-                        title='Distribuição de Custos por Categoria')
+                        title='DistribuiÃ§Ã£o de Custos por Categoria')
             st.plotly_chart(fig, use_container_width=True)
             
             # Tabela detalhada
@@ -1932,12 +1927,12 @@ def exibir_controle_financeiro():
             
             # Total geral
             total_geral = df_custos['Total'].sum()
-            st.metric("Total de Custos no Período", f"MZN {total_geral:,.2f}")
+            st.metric("Total de Custos no PerÃ­odo", f"MZN {total_geral:,.2f}")
         else:
-            st.info("Nenhum custo registrado no período selecionado.")
+            st.info("Nenhum custo registrado no perÃ­odo selecionado.")
     
     with tab3:
-        # Orçamento vs Realizado
+        # OrÃ§amento vs Realizado
         projeto = obter_projeto_por_id(filtros['projeto_id'])
         
         if projeto:
@@ -1955,7 +1950,7 @@ def exibir_controle_financeiro():
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Orçamento Total", f"MZN {orcamento_total:,.2f}")
+                st.metric("OrÃ§amento Total", f"MZN {orcamento_total:,.2f}")
             with col2:
                 st.metric("Custos Realizados", f"MZN {custos_totais:,.2f}")
             with col3:
@@ -1964,80 +1959,80 @@ def exibir_controle_financeiro():
             # Barra de progresso
             st.progress(min(1.0, percentual_utilizado / 100))
             
-            # Alerta se ultrapassar 80% do orçamento
+            # Alerta se ultrapassar 80% do orÃ§amento
             if percentual_utilizado > 80:
-                st.error(f"⚠️ Atenção! {percentual_utilizado:.1f}% do orçamento já foi utilizado.")
+                st.error(f"âš ï¸ AtenÃ§Ã£o! {percentual_utilizado:.1f}% do orÃ§amento jÃ¡ foi utilizado.")
                 criar_alerta(filtros['projeto_id'], 'financeiro',
-                           f"Orçamento utilizado em {percentual_utilizado:.1f}%")
+                           f"OrÃ§amento utilizado em {percentual_utilizado:.1f}%")
         else:
-            st.info("Projeto não encontrado.")
+            st.info("Projeto nÃ£o encontrado.")
 
 def exibir_configuracoes():
-    """Exibe as configurações do sistema"""
-    st.markdown('<h2 class="sub-header">⚙️ Configurações do Sistema</h2>', unsafe_allow_html=True)
+    """Exibe as configuraÃ§Ãµes do sistema"""
+    st.markdown('<h2 class="sub-header">âš™ï¸ ConfiguraÃ§Ãµes do Sistema</h2>', unsafe_allow_html=True)
     
     tab1, tab2, tab3 = st.tabs(["Email", "WhatsApp", "Sistema"])
     
     with tab1:
-        st.subheader("Configurações de Email")
+        st.subheader("ConfiguraÃ§Ãµes de Email")
         
-        # Em produção, estas configurações viriam de um arquivo de configuração ou banco de dados
+        # Em produÃ§Ã£o, estas configuraÃ§Ãµes viriam de um arquivo de configuraÃ§Ã£o ou banco de dados
         smtp_server = st.text_input("Servidor SMTP", value="smtp.gmail.com")
         smtp_port = st.number_input("Porta SMTP", value=587)
         email_from = st.text_input("Email de origem", value="seu_email@gmail.com")
         email_password = st.text_input("Senha do email", type="password")
         
         emails_notificacao = st.text_area(
-            "Emails para notificações (um por linha)",
+            "Emails para notificaÃ§Ãµes (um por linha)",
             value="proprietario@obra.com\ngerente@obra.com\nfiscal@obra.com"
         )
         
-        if st.button("Salvar Configurações de Email"):
-            st.success("Configurações de email salvas! (Em produção, seriam persistidas)")
+        if st.button("Salvar ConfiguraÃ§Ãµes de Email"):
+            st.success("ConfiguraÃ§Ãµes de email salvas! (Em produÃ§Ã£o, seriam persistidas)")
     
     with tab2:
-        st.subheader("Configurações do WhatsApp (Twilio)")
+        st.subheader("ConfiguraÃ§Ãµes do WhatsApp (Twilio)")
         
         account_sid = st.text_input("Account SID", value="sua_account_sid")
         auth_token = st.text_input("Auth Token", type="password", value="seu_auth_token")
-        from_number = st.text_input("Número Twilio", value="whatsapp:+14155238886")
+        from_number = st.text_input("NÃºmero Twilio", value="whatsapp:+14155238886")
         
         numeros_whatsapp = st.text_area(
-            "Números para notificações WhatsApp (um por linha)",
+            "NÃºmeros para notificaÃ§Ãµes WhatsApp (um por linha)",
             value="whatsapp:+258841234567\nwhatsapp:+258842345678"
         )
         
-        if st.button("Salvar Configurações WhatsApp"):
-            st.success("Configurações do WhatsApp salvas! (Em produção, seriam persistidas)")
+        if st.button("Salvar ConfiguraÃ§Ãµes WhatsApp"):
+            st.success("ConfiguraÃ§Ãµes do WhatsApp salvas! (Em produÃ§Ã£o, seriam persistidas)")
     
     with tab3:
-        st.subheader("Configurações do Sistema")
+        st.subheader("ConfiguraÃ§Ãµes do Sistema")
         
         # Backup do banco de dados
-        if st.button("🔄 Criar Backup do Banco de Dados"):
+        if st.button("ðŸ”„ Criar Backup do Banco de Dados"):
             try:
                 if os.path.exists('controle_obra.db'):
                     backup_data = open('controle_obra.db', 'rb').read()
                     st.download_button(
-                        label="⬇️ Baixar Backup",
+                        label="â¬‡ï¸ Baixar Backup",
                         data=backup_data,
                         file_name=f"backup_obra_{date.today()}.db",
                         mime="application/x-sqlite3",
                         key="download_backup"
                     )
                 else:
-                    st.error("Banco de dados não encontrado.")
+                    st.error("Banco de dados nÃ£o encontrado.")
             except Exception as e:
                 st.error(f"Erro ao criar backup: {str(e)}")
         
         # Limpar cache de fotos
-        if st.button("🧹 Limpar Cache de Fotos"):
-            st.warning("Esta ação removerá fotos não associadas a relatórios. Tem certeza?")
+        if st.button("ðŸ§¹ Limpar Cache de Fotos"):
+            st.warning("Esta aÃ§Ã£o removerÃ¡ fotos nÃ£o associadas a relatÃ³rios. Tem certeza?")
             if st.button("Confirmar Limpeza", key="confirmar_limpeza"):
                 st.info("Funcionalidade em desenvolvimento")
         
-        # Estatísticas do sistema
-        st.subheader("Estatísticas do Sistema")
+        # EstatÃ­sticas do sistema
+        st.subheader("EstatÃ­sticas do Sistema")
         
         c = conn.cursor()
         
@@ -2055,17 +2050,17 @@ def exibir_configuracoes():
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            st.metric("Usuários", total_usuarios)
+            st.metric("UsuÃ¡rios", total_usuarios)
         with col2:
             st.metric("Projetos", total_projetos)
         with col3:
-            st.metric("Relatórios", total_relatorios)
+            st.metric("RelatÃ³rios", total_relatorios)
         with col4:
             st.metric("Fotos", total_fotos)
 
 def exibir_relatorios_lista():
-    """Exibe lista de relatórios para visualização"""
-    st.markdown('<h2 class="sub-header">📋 Relatórios Diários</h2>', unsafe_allow_html=True)
+    """Exibe lista de relatÃ³rios para visualizaÃ§Ã£o"""
+    st.markdown('<h2 class="sub-header">ðŸ“‹ RelatÃ³rios DiÃ¡rios</h2>', unsafe_allow_html=True)
     
     filtros = st.session_state.filtros
     relatorios = obter_relatorios(filtros['projeto_id'], 
@@ -2073,20 +2068,20 @@ def exibir_relatorios_lista():
                                  filtros['data_fim'])
     
     if not relatorios:
-        st.info("Nenhum relatório encontrado para o período selecionado.")
+        st.info("Nenhum relatÃ³rio encontrado para o perÃ­odo selecionado.")
         return
     
     # Filtros adicionais
     col_filtro1, col_filtro2, col_filtro3 = st.columns(3)
     with col_filtro1:
         filtrar_status = st.multiselect("Filtrar por status", 
-                                       ["Concluído", "Em andamento", "Atrasado", "Paralisado"],
-                                       default=["Concluído", "Em andamento"])
+                                       ["ConcluÃ­do", "Em andamento", "Atrasado", "Paralisado"],
+                                       default=["ConcluÃ­do", "Em andamento"])
     with col_filtro2:
         filtrar_acidente = st.selectbox("Filtrar por acidente", 
                                        ["Todos", "Com acidente", "Sem acidente"])
     with col_filtro3:
-        min_produtividade = st.slider("Produtividade mínima", 0, 100, 0)
+        min_produtividade = st.slider("Produtividade mÃ­nima", 0, 100, 0)
     
     # Aplicar filtros
     relatorios_filtrados = []
@@ -2102,27 +2097,27 @@ def exibir_relatorios_lista():
         
         relatorios_filtrados.append(rel)
     
-    # Exibir relatórios
+    # Exibir relatÃ³rios
     for rel in relatorios_filtrados:
-        # ÍNDICES CORRIGIDOS:
+        # ÃNDICES CORRIGIDOS:
         # 0:id, 1:data, 2:projeto_id, 3:usuario_id, 4:temperatura, 5:atividades,
         # 6:equipe, 7:equipamentos, 8:ocorrencias, 9:acidentes, 10:plano_amanha,
         # 11:status, 12:produtividade, 13:observacoes, 14:projeto_nome, 15:usuario_nome
         
         with st.expander(f"{rel[1]} - {rel[14]} - {rel[11]} - {rel[12]}%"):
-            # Layout do relatório
-            tab_det, tab_fotos, tab_acoes = st.tabs(["Detalhes", "Fotos", "Ações"])
+            # Layout do relatÃ³rio
+            tab_det, tab_fotos, tab_acoes = st.tabs(["Detalhes", "Fotos", "AÃ§Ãµes"])
             
             with tab_det:
                 col1, col2 = st.columns(2)
                 with col1:
                     st.write(f"**Data:** {rel[1]}")
                     st.write(f"**Projeto:** {rel[14]}")
-                    st.write(f"**Responsável:** {rel[15]}")
+                    st.write(f"**ResponsÃ¡vel:** {rel[15]}")
                     st.write(f"**Status:** {rel[11]}")
                     st.write(f"**Produtividade:** {rel[12]}%")
                 with col2:
-                    st.write(f"**Condições Climáticas:** {rel[4]}")
+                    st.write(f"**CondiÃ§Ãµes ClimÃ¡ticas:** {rel[4]}")
                     st.write(f"**Equipe:** {rel[6]}")
                     st.write(f"**Equipamentos:** {rel[7]}")
                     st.write(f"**Acidentes:** {rel[9]}")
@@ -2131,11 +2126,11 @@ def exibir_relatorios_lista():
                 st.info(rel[5])
                 
                 if rel[8] and rel[8] != 'Nenhuma':
-                    st.write("**Ocorrências:**")
+                    st.write("**OcorrÃªncias:**")
                     st.warning(rel[8])
                 
                 if rel[10]:
-                    st.write("**Plano para o Próximo Dia:**")
+                    st.write("**Plano para o PrÃ³ximo Dia:**")
                     st.success(rel[10])
             
             with tab_fotos:
@@ -2151,43 +2146,43 @@ def exibir_relatorios_lista():
                                     st.image(img_bytes, caption=foto[3] or f"Foto {idx+1}", 
                                             use_column_width=True)
                                 else:
-                                    st.warning("Arquivo não encontrado")
+                                    st.warning("Arquivo nÃ£o encontrado")
                             except:
                                 st.error("Erro ao carregar foto")
                 else:
-                    st.info("Nenhuma foto para este relatório")
+                    st.info("Nenhuma foto para este relatÃ³rio")
             
             with tab_acoes:
                 col_btn1, col_btn2, col_btn3 = st.columns(3)
                 with col_btn1:
-                    if st.button("📄 Gerar PDF", key=f"gen_pdf_{rel[0]}"):
+                    if st.button("ðŸ“„ Gerar PDF", key=f"gen_pdf_{rel[0]}"):
                         pdf = gerar_relatorio_pdf(rel[0])
                         if pdf:
                             st.download_button(
-                                label="⬇️ Baixar PDF",
+                                label="â¬‡ï¸ Baixar PDF",
                                 data=pdf,
                                 file_name=f"relatorio_{rel[1]}.pdf",
                                 mime="application/pdf",
                                 key=f"dl_pdf_{rel[0]}"
                             )
                 with col_btn2:
-                    if st.button("📧 Enviar por Email", key=f"email_{rel[0]}"):
+                    if st.button("ðŸ“§ Enviar por Email", key=f"email_{rel[0]}"):
                         st.info("Funcionalidade em desenvolvimento")
                 with col_btn3:
-                    if st.button("📱 Compartilhar WhatsApp", key=f"share_{rel[0]}"):
-                        mensagem = f"Relatório {rel[1]} - {rel[14]}\nStatus: {rel[11]}\nProdutividade: {rel[12]}%"
+                    if st.button("ðŸ“± Compartilhar WhatsApp", key=f"share_{rel[0]}"):
+                        mensagem = f"RelatÃ³rio {rel[1]} - {rel[14]}\nStatus: {rel[11]}\nProdutividade: {rel[12]}%"
                         enviar_whatsapp_alerta(filtros['projeto_id'], 'info', mensagem)
                         st.success("Mensagem enviada para WhatsApp!")
 
 def exibir_relatorios_financeiros():
-    """Exibe relatórios financeiros específicos"""
-    st.markdown('<h2 class="sub-header">💰 Relatórios Financeiros</h2>', unsafe_allow_html=True)
+    """Exibe relatÃ³rios financeiros especÃ­ficos"""
+    st.markdown('<h2 class="sub-header">ðŸ’° RelatÃ³rios Financeiros</h2>', unsafe_allow_html=True)
     
     filtros = st.session_state.filtros
     projeto = obter_projeto_por_id(filtros['projeto_id'])
     
     if not projeto:
-        st.error("Projeto não encontrado.")
+        st.error("Projeto nÃ£o encontrado.")
         return
     
     # Obter custos
@@ -2201,12 +2196,12 @@ def exibir_relatorios_financeiros():
     
     custos = c.fetchall()
     
-    tab1, tab2, tab3 = st.tabs(["Fluxo de Caixa", "Custos Detalhados", "Previsões"])
+    tab1, tab2, tab3 = st.tabs(["Fluxo de Caixa", "Custos Detalhados", "PrevisÃµes"])
     
     with tab1:
         # Fluxo de caixa
         if custos:
-            df = pd.DataFrame(custos, columns=['Categoria', 'Descrição', 'Valor', 'Data'])
+            df = pd.DataFrame(custos, columns=['Categoria', 'DescriÃ§Ã£o', 'Valor', 'Data'])
             df['Data'] = pd.to_datetime(df['Data'])
             
             # Agrupar por data
@@ -2215,43 +2210,43 @@ def exibir_relatorios_financeiros():
             
             fig = go.Figure()
             fig.add_trace(go.Bar(x=df_fluxo['Data'], y=df_fluxo['Valor'],
-                                name='Custo Diário', marker_color='indianred'))
+                                name='Custo DiÃ¡rio', marker_color='indianred'))
             fig.add_trace(go.Scatter(x=df_fluxo['Data'], y=df_fluxo['Acumulado'],
                                     name='Custo Acumulado', line=dict(color='royalblue', width=3)))
             
-            fig.update_layout(title='Fluxo de Caixa Diário',
+            fig.update_layout(title='Fluxo de Caixa DiÃ¡rio',
                             xaxis_title='Data',
                             yaxis_title='Valor (MZN)',
                             hovermode='x unified')
             
             st.plotly_chart(fig, use_container_width=True)
             
-            # Métricas
+            # MÃ©tricas
             total_periodo = df['Valor'].sum()
             media_diaria = total_periodo / len(df_fluxo) if len(df_fluxo) > 0 else 0
             maior_custo = df['Valor'].max()
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Total no Período", f"MZN {total_periodo:,.2f}")
+                st.metric("Total no PerÃ­odo", f"MZN {total_periodo:,.2f}")
             with col2:
-                st.metric("Média Diária", f"MZN {media_diaria:,.2f}")
+                st.metric("MÃ©dia DiÃ¡ria", f"MZN {media_diaria:,.2f}")
             with col3:
                 st.metric("Maior Custo", f"MZN {maior_custo:,.2f}")
         else:
-            st.info("Nenhum custo registrado no período.")
+            st.info("Nenhum custo registrado no perÃ­odo.")
     
     with tab2:
         # Custos detalhados
         if custos:
-            df = pd.DataFrame(custos, columns=['Categoria', 'Descrição', 'Valor', 'Data'])
+            df = pd.DataFrame(custos, columns=['Categoria', 'DescriÃ§Ã£o', 'Valor', 'Data'])
             
             # Agrupar por categoria
             df_cat = df.groupby('Categoria').agg({
                 'Valor': ['sum', 'count', 'mean', 'max']
             }).round(2)
             
-            df_cat.columns = ['Total', 'Quantidade', 'Média', 'Máximo']
+            df_cat.columns = ['Total', 'Quantidade', 'MÃ©dia', 'MÃ¡ximo']
             df_cat = df_cat.sort_values('Total', ascending=False)
             
             st.subheader("Resumo por Categoria")
@@ -2261,17 +2256,17 @@ def exibir_relatorios_financeiros():
             st.subheader("Detalhamento de Custos")
             st.dataframe(df, use_container_width=True)
         else:
-            st.info("Nenhum custo registrado no período.")
+            st.info("Nenhum custo registrado no perÃ­odo.")
     
     with tab3:
-        # Previsões
-        st.subheader("Previsão de Custos")
+        # PrevisÃµes
+        st.subheader("PrevisÃ£o de Custos")
         
         if custos:
-            df = pd.DataFrame(custos, columns=['Categoria', 'Descrição', 'Valor', 'Data'])
+            df = pd.DataFrame(custos, columns=['Categoria', 'DescriÃ§Ã£o', 'Valor', 'Data'])
             df['Data'] = pd.to_datetime(df['Data'])
             
-            # Calcular custo médio diário
+            # Calcular custo mÃ©dio diÃ¡rio
             dias_periodo = (filtros['data_fim'] - filtros['data_inicio']).days + 1
             custo_total = df['Valor'].sum()
             custo_medio_diario = custo_total / dias_periodo if dias_periodo > 0 else 0
@@ -2284,29 +2279,29 @@ def exibir_relatorios_financeiros():
             
             dias_restantes = max(0, (data_fim_projeto - date.today()).days)
             
-            # Previsão
+            # PrevisÃ£o
             previsao_restante = custo_medio_diario * dias_restantes
             previsao_total = custo_total + previsao_restante
             
             col1, col2, col3 = st.columns(3)
             with col1:
-                st.metric("Custo Médio Diário", f"MZN {custo_medio_diario:,.2f}")
+                st.metric("Custo MÃ©dio DiÃ¡rio", f"MZN {custo_medio_diario:,.2f}")
             with col2:
                 st.metric("Dias Restantes", dias_restantes)
             with col3:
-                st.metric("Previsão Custo Restante", f"MZN {previsao_restante:,.2f}")
+                st.metric("PrevisÃ£o Custo Restante", f"MZN {previsao_restante:,.2f}")
             
-            # Comparação com orçamento
+            # ComparaÃ§Ã£o com orÃ§amento
             orcamento = projeto[4]
             percentual_previsto = (previsao_total / orcamento * 100) if orcamento > 0 else 0
             
-            st.subheader("Comparação com Orçamento")
+            st.subheader("ComparaÃ§Ã£o com OrÃ§amento")
             
             fig = go.Figure()
             fig.add_trace(go.Indicator(
                 mode = "gauge+number",
                 value = percentual_previsto,
-                title = {'text': "Orçamento Previsto (%)"},
+                title = {'text': "OrÃ§amento Previsto (%)"},
                 domain = {'x': [0, 1], 'y': [0, 1]},
                 gauge = {
                     'axis': {'range': [None, 100]},
@@ -2328,20 +2323,20 @@ def exibir_relatorios_financeiros():
             st.plotly_chart(fig, use_container_width=True)
             
             if percentual_previsto > 100:
-                st.error(f"⚠️ ATENÇÃO: Previsão ultrapassa o orçamento em {percentual_previsto-100:.1f}%!")
+                st.error(f"âš ï¸ ATENÃ‡ÃƒO: PrevisÃ£o ultrapassa o orÃ§amento em {percentual_previsto-100:.1f}%!")
             elif percentual_previsto > 90:
-                st.warning(f"⚠️ CUIDADO: Previsão próxima do orçamento ({percentual_previsto:.1f}%)")
+                st.warning(f"âš ï¸ CUIDADO: PrevisÃ£o prÃ³xima do orÃ§amento ({percentual_previsto:.1f}%)")
         else:
-            st.info("Insira custos para gerar previsões.")
+            st.info("Insira custos para gerar previsÃµes.")
 
 # ============================================
 # MAIN APP
 # ============================================
 
 def main():
-    """Função principal da aplicação"""
+    """FunÃ§Ã£o principal da aplicaÃ§Ã£o"""
     
-    # Verificar se o usuário está logado
+    # Verificar se o usuÃ¡rio estÃ¡ logado
     if 'usuario' not in st.session_state:
         tela_login()
     else:
@@ -2349,3 +2344,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
