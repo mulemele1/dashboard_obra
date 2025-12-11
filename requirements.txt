@@ -1,4 +1,11 @@
-﻿plotly==5.18.0
-streamlit==1.28.1
-pandas==2.2.0
-numpy==1.26.4
+﻿streamlit
+pandas
+numpy
+plotly
+pillow
+requests
+twilio
+pdfkit
+reportlab
+streamlit-authenticator
+pyyaml
