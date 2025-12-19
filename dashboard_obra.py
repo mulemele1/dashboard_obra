@@ -7,6 +7,8 @@ import sqlite3
 import hashlib
 import io
 import os
+import plotly.graph_objects as go
+import plotly.express as px
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet
@@ -51,11 +53,162 @@ st.markdown("""
         color: white !important;
         border-color: #1E40AF !important;
     }
+    
+    /* Estilos para cards do dashboard */
+    .card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1rem;
+        border-left: 5px solid #1E40AF;
+    }
+    
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #1E40AF;
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #2D3748;
+    }
+    
+    .card-subtitle {
+        font-size: 0.9rem;
+        color: #718096;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .status-completed {
+        background-color: #D1FAE5;
+        color: #065F46;
+        border: 1px solid #10B981;
+    }
+    
+    .status-in-progress {
+        background-color: #FEF3C7;
+        color: #92400E;
+        border: 1px solid #F59E0B;
+    }
+    
+    .status-pending {
+        background-color: #FEE2E2;
+        color: #991B1B;
+        border: 1px solid #EF4444;
+    }
+    
+    .status-delayed {
+        background-color: #E5E7EB;
+        color: #4B5563;
+        border: 1px solid #9CA3AF;
+    }
+    
+    .activity-card {
+        background-color: #F8FAFC;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #3B82F6;
+    }
+    
+    .subactivity-item {
+        background-color: white;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid #E5E7EB;
+    }
+    
+    .subactivity-completed {
+        border-left-color: #10B981;
+        background-color: #F0FDF4;
+    }
+    
+    .subactivity-pending {
+        border-left-color: #F59E0B;
+        background-color: #FFFBEB;
+    }
+    
+    .progress-bar {
+        height: 10px;
+        background-color: #E5E7EB;
+        border-radius: 5px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background-color: #10B981;
+        border-radius: 5px;
+    }
+    
+    .plan-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .occurrence-card {
+        background-color: #FEF3C7;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 5px solid #F59E0B;
+    }
+    
+    .equipment-card {
+        background-color: #E0F2FE;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 5px solid #0EA5E9;
+    }
+    
+    .workforce-card {
+        background-color: #F0F9FF;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        border-left: 5px solid #0369A1;
+    }
+    
+    .weather-card {
+        background-color: #F0FDFA;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 5px solid #0D9488;
+    }
+    
+    /* Estilo para gráficos */
+    .plot-container {
+        background-color: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # ============================================
-# FUNÇÕES AUXILIARES
+# FUNÇÕES AUXILIARES - ATUALIZADA
 # ============================================
 def init_database():
     conn = sqlite3.connect('controle_obra.db', check_same_thread=False)
@@ -73,7 +226,7 @@ def init_database():
         telefone TEXT, 
         ativo INTEGER DEFAULT 1)""")
     
-    # Tabela de projetos
+    # Tabela de projetos - ADICIONADA coluna proprietario_id
     c.execute("""CREATE TABLE IF NOT EXISTS projetos (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         nome TEXT NOT NULL, 
@@ -84,7 +237,9 @@ def init_database():
         data_fim_previsto DATE, 
         status TEXT DEFAULT 'Em andamento', 
         responsavel_id INTEGER,
-        FOREIGN KEY (responsavel_id) REFERENCES usuarios (id))""")
+        proprietario_id INTEGER,
+        FOREIGN KEY (responsavel_id) REFERENCES usuarios (id),
+        FOREIGN KEY (proprietario_id) REFERENCES usuarios (id))""")
     
     # Tabela de relatórios diários
     c.execute("""CREATE TABLE IF NOT EXISTS relatorios_diarios (
@@ -110,6 +265,7 @@ def init_database():
         relatorio_id INTEGER NOT NULL, 
         foto_path TEXT NOT NULL,
         descricao TEXT, 
+        atividade_principal TEXT,
         data_upload DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (relatorio_id) REFERENCES relatorios_diarios (id))""")
 
@@ -123,12 +279,22 @@ def init_database():
         FOREIGN KEY (projeto_id) REFERENCES projetos (id),
         UNIQUE(usuario_id, projeto_id))""")
 
+    # VERIFICAR E ADICIONAR COLUNAS SE NECESSÁRIO
+    try:
+        c.execute("SELECT proprietario_id FROM projetos LIMIT 1")
+    except sqlite3.OperationalError:
+        # A coluna não existe, vamos adicioná-la
+        c.execute("ALTER TABLE projetos ADD COLUMN proprietario_id INTEGER")
+        conn.commit()
+
     # Inserir usuários padrão se não existirem
     c.execute("SELECT COUNT(*) FROM usuarios")
     if c.fetchone()[0] == 0:
         usuarios_padrao = [
             ('fiscal', 'Fiscal da Obra', 'fiscal@obra.com', hashlib.sha256('fiscal123'.encode()).hexdigest(), 'fiscal', '+258840000000'),
-            ('proprietario', 'Proprietário', 'prop@obra.com', hashlib.sha256('prop123'.encode()).hexdigest(), 'proprietario', '+258850000000'),
+            ('proprietario1', 'João Silva', 'joao@obra.com', hashlib.sha256('joao123'.encode()).hexdigest(), 'proprietario', '+258841111111'),
+            ('proprietario2', 'Maria Santos', 'maria@obra.com', hashlib.sha256('maria123'.encode()).hexdigest(), 'proprietario', '+258842222222'),
+            ('proprietario3', 'Antonio Pereira', 'antonio@obra.com', hashlib.sha256('antonio123'.encode()).hexdigest(), 'proprietario', '+258843333333'),
             ('admin', 'Administrador', 'admin@obra.com', hashlib.sha256('admin123'.encode()).hexdigest(), 'admin', '+258860000000')
         ]
         c.executemany("INSERT INTO usuarios (username,nome,email,senha_hash,tipo,telefone) VALUES (?,?,?,?,?,?)", usuarios_padrao)
@@ -136,9 +302,14 @@ def init_database():
     # Inserir projeto padrão se não existir
     c.execute("SELECT COUNT(*) FROM projetos")
     if c.fetchone()[0] == 0:
-        c.execute("""INSERT INTO projetos (nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, responsavel_id)
-                  VALUES (?,?,?,?,?,?,?)""",
-                  ('Obra Xai-Xai', 'Requalificação com expansão', 'Xai-Xai, Gaza', 2500000.0, '2025-02-01', '2025-08-01', 1))
+        projetos_padrao = [
+            ('Obra Xai-Xai', 'Requalificação com expansão', 'Xai-Xai, Gaza', 2500000.0, '2025-02-01', '2025-08-01', 1, 2),
+            ('Condomínio Maputo', 'Residencial de luxo', 'Maputo', 3500000.0, '2025-01-15', '2025-10-30', 1, 3),
+            ('Escola Gaza', 'Escola secundária', 'Gaza', 1800000.0, '2025-03-01', '2025-11-15', 1, 4)
+        ]
+        for projeto in projetos_padrao:
+            c.execute("""INSERT INTO projetos (nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, responsavel_id, proprietario_id)
+                      VALUES (?,?,?,?,?,?,?,?)""", projeto)
     
     conn.commit()
     return conn
@@ -153,25 +324,58 @@ def verificar_login(username, password):
 
 def obter_projetos():
     c = conn.cursor()
-    c.execute("SELECT p.*, u.nome as responsavel_nome FROM projetos p LEFT JOIN usuarios u ON p.responsavel_id = u.id ORDER BY p.data_inicio DESC")
+    c.execute("""SELECT p.*, u.nome as responsavel_nome, up.nome as proprietario_nome 
+                 FROM projetos p 
+                 LEFT JOIN usuarios u ON p.responsavel_id = u.id
+                 LEFT JOIN usuarios up ON p.proprietario_id = up.id
+                 ORDER BY p.data_inicio DESC""")
     return c.fetchall()
 
-def obter_projetos_por_usuario(usuario_id):
+def obter_projetos_por_usuario(usuario_id, usuario_tipo):
     """Obtém projetos que um usuário tem acesso"""
     c = conn.cursor()
-    c.execute("""
-        SELECT DISTINCT p.*, u.nome as responsavel_nome 
-        FROM projetos p 
-        LEFT JOIN usuarios u ON p.responsavel_id = u.id
-        LEFT JOIN usuarios_projetos up ON p.id = up.projeto_id
-        WHERE up.usuario_id = ? OR p.responsavel_id = ?
-        ORDER BY p.data_inicio DESC
-    """, (usuario_id, usuario_id))
+    
+    if usuario_tipo == 'admin':
+        # Admin vê todos os projetos
+        c.execute("""
+            SELECT p.*, u.nome as responsavel_nome, up.nome as proprietario_nome 
+            FROM projetos p 
+            LEFT JOIN usuarios u ON p.responsavel_id = u.id
+            LEFT JOIN usuarios up ON p.proprietario_id = up.id
+            ORDER BY p.data_inicio DESC
+        """)
+    elif usuario_tipo == 'fiscal':
+        # Fiscal vê todos os projetos
+        c.execute("""
+            SELECT p.*, u.nome as responsavel_nome, up.nome as proprietario_nome 
+            FROM projetos p 
+            LEFT JOIN usuarios u ON p.responsavel_id = u.id
+            LEFT JOIN usuarios up ON p.proprietario_id = up.id
+            ORDER BY p.data_inicio DESC
+        """)
+    else:
+        # Proprietário vê apenas seus projetos
+        c.execute("""
+            SELECT DISTINCT p.*, u.nome as responsavel_nome, up.nome as proprietario_nome 
+            FROM projetos p 
+            LEFT JOIN usuarios u ON p.responsavel_id = u.id
+            LEFT JOIN usuarios up ON p.proprietario_id = up.id
+            LEFT JOIN usuarios_projetos upr ON p.id = upr.projeto_id
+            WHERE p.proprietario_id = ? OR upr.usuario_id = ? OR p.responsavel_id = ?
+            ORDER BY p.data_inicio DESC
+        """, (usuario_id, usuario_id, usuario_id))
+    
     return c.fetchall()
 
 def obter_usuarios():
     c = conn.cursor()
     c.execute("SELECT * FROM usuarios ORDER BY nome")
+    return c.fetchall()
+
+def obter_usuarios_por_tipo(tipo):
+    """Obtém usuários por tipo específico"""
+    c = conn.cursor()
+    c.execute("SELECT * FROM usuarios WHERE tipo = ? AND ativo = 1 ORDER BY nome", (tipo,))
     return c.fetchall()
 
 def obter_usuarios_por_projeto(projeto_id):
@@ -211,30 +415,67 @@ def atualizar_usuario(usuario_id, username, nome, email, tipo, telefone, ativo):
     except sqlite3.IntegrityError as e:
         raise Exception(f"Erro: {str(e)}")
 
-def adicionar_projeto(nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, responsavel_id):
+def adicionar_projeto(nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, responsavel_id, proprietario_id):
     c = conn.cursor()
     try:
         c.execute("""
-            INSERT INTO projetos (nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, responsavel_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, responsavel_id))
+            INSERT INTO projetos (nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, responsavel_id, proprietario_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, responsavel_id, proprietario_id))
+        projeto_id = c.lastrowid
+        
+        # Associar automaticamente o proprietário ao projeto
+        if proprietario_id:
+            associar_usuario_projeto(proprietario_id, projeto_id)
+        
         conn.commit()
-        return c.lastrowid
+        return projeto_id
     except Exception as e:
         raise Exception(f"Erro: {str(e)}")
 
-def atualizar_projeto(projeto_id, nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, status, responsavel_id):
+def atualizar_projeto(projeto_id, nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, status, responsavel_id, proprietario_id):
     c = conn.cursor()
     try:
         c.execute("""
             UPDATE projetos 
-            SET nome=?, descricao=?, localizacao=?, orcamento_total=?, data_inicio=?, data_fim_previsto=?, status=?, responsavel_id=?
+            SET nome=?, descricao=?, localizacao=?, orcamento_total=?, data_inicio=?, data_fim_previsto=?, status=?, responsavel_id=?, proprietario_id=?
             WHERE id=?
-        """, (nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, status, responsavel_id, projeto_id))
+        """, (nome, descricao, localizacao, orcamento_total, data_inicio, data_fim_previsto, status, responsavel_id, proprietario_id, projeto_id))
         conn.commit()
         return True
     except Exception as e:
         raise Exception(f"Erro: {str(e)}")
+
+def excluir_projeto(projeto_id):
+    """Exclui um projeto e todos os dados relacionados"""
+    c = conn.cursor()
+    try:
+        # Obter todas as fotos do projeto para excluir arquivos
+        c.execute("""
+            SELECT f.foto_path FROM fotos_obra f
+            JOIN relatorios_diarios r ON f.relatorio_id = r.id
+            WHERE r.projeto_id = ?
+        """, (projeto_id,))
+        
+        fotos = c.fetchall()
+        for foto in fotos:
+            caminho = foto["foto_path"]
+            if os.path.exists(caminho):
+                try:
+                    os.remove(caminho)
+                except:
+                    pass
+        
+        # Excluir dados relacionados
+        c.execute("DELETE FROM usuarios_projetos WHERE projeto_id = ?", (projeto_id,))
+        c.execute("DELETE FROM fotos_obra WHERE relatorio_id IN (SELECT id FROM relatorios_diarios WHERE projeto_id = ?)", (projeto_id,))
+        c.execute("DELETE FROM relatorios_diarios WHERE projeto_id = ?", (projeto_id,))
+        c.execute("DELETE FROM projetos WHERE id = ?", (projeto_id,))
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        raise Exception(f"Erro ao excluir projeto: {str(e)}")
 
 def associar_usuario_projeto(usuario_id, projeto_id):
     """Associa um usuário a um projeto"""
@@ -268,10 +509,10 @@ def obter_projetos_disponiveis_usuario(usuario_id):
             SELECT projeto_id FROM usuarios_projetos WHERE usuario_id = ?
         )
         AND p.id NOT IN (
-            SELECT id FROM projetos WHERE responsavel_id = ?
+            SELECT id FROM projetos WHERE responsavel_id = ? OR proprietario_id = ?
         )
         ORDER BY p.nome
-    """, (usuario_id, usuario_id))
+    """, (usuario_id, usuario_id, usuario_id))
     return c.fetchall()
 
 def obter_relatorios_usuario(usuario_id, admin=False, projeto_id=None):
@@ -290,9 +531,12 @@ def obter_relatorios_usuario(usuario_id, admin=False, projeto_id=None):
                    FROM relatorios_diarios r
                    JOIN projetos p ON r.projeto_id = p.id
                    JOIN usuarios u ON r.usuario_id = u.id
-                   JOIN usuarios_projetos up ON p.id = up.projeto_id
-                   WHERE up.usuario_id = ?"""
-        params = [usuario_id]
+                   WHERE p.id IN (
+                       SELECT projeto_id FROM usuarios_projetos WHERE usuario_id = ?
+                       UNION
+                       SELECT id FROM projetos WHERE responsavel_id = ? OR proprietario_id = ?
+                   )"""
+        params = [usuario_id, usuario_id, usuario_id]
     
     if projeto_id and projeto_id != 0:
         where_clause = " AND" if params else " WHERE"
@@ -302,6 +546,107 @@ def obter_relatorios_usuario(usuario_id, admin=False, projeto_id=None):
     query += " ORDER BY r.data DESC"
     c.execute(query, params)
     return c.fetchall()
+
+def obter_fotos_por_relatorio(relatorio_id):
+    """Obtém todas as fotos de um relatório específico"""
+    c = conn.cursor()
+    c.execute("""
+        SELECT * FROM fotos_obra 
+        WHERE relatorio_id = ?
+        ORDER BY data_upload DESC
+    """, (relatorio_id,))
+    return c.fetchall()
+
+def obter_fotos_por_atividade(projeto_id=None, usuario_id=None, usuario_tipo=None):
+    """Obtém fotos agrupadas por atividade principal"""
+    c = conn.cursor()
+    
+    query = """
+        SELECT f.*, r.data, p.nome as projeto_nome, 
+               COALESCE(f.atividade_principal, 'Sem atividade') as atividade_agrupada
+        FROM fotos_obra f
+        JOIN relatorios_diarios r ON f.relatorio_id = r.id
+        JOIN projetos p ON r.projeto_id = p.id
+    """
+    
+    params = []
+    
+    if projeto_id and projeto_id != 0:
+        query += " WHERE r.projeto_id = ?"
+        params.append(projeto_id)
+    elif usuario_tipo != "admin":
+        # Para não-admins, filtrar apenas projetos que têm acesso
+        query += """ WHERE r.projeto_id IN (
+            SELECT projeto_id FROM usuarios_projetos WHERE usuario_id = ?
+            UNION
+            SELECT id FROM projetos WHERE responsavel_id = ? OR proprietario_id = ?
+        )"""
+        params.extend([usuario_id, usuario_id, usuario_id])
+    
+    query += " ORDER BY f.atividade_principal, r.data DESC, f.data_upload DESC"
+    
+    c.execute(query, params)
+    return c.fetchall()
+
+def contar_fotos_por_atividade(projeto_id=None, usuario_id=None, usuario_tipo=None):
+    """Conta fotos por atividade principal"""
+    c = conn.cursor()
+    
+    query = """
+        SELECT 
+            COALESCE(f.atividade_principal, 'Sem atividade') as atividade,
+            COUNT(*) as total_fotos
+        FROM fotos_obra f
+        JOIN relatorios_diarios r ON f.relatorio_id = r.id
+        JOIN projetos p ON r.projeto_id = p.id
+    """
+    
+    params = []
+    
+    if projeto_id and projeto_id != 0:
+        query += " WHERE r.projeto_id = ?"
+        params.append(projeto_id)
+    elif usuario_tipo != "admin":
+        query += """ WHERE r.projeto_id IN (
+            SELECT projeto_id FROM usuarios_projetos WHERE usuario_id = ?
+            UNION
+            SELECT id FROM projetos WHERE responsavel_id = ? OR proprietario_id = ?
+        )"""
+        params.extend([usuario_id, usuario_id, usuario_id])
+    
+    query += " GROUP BY atividade ORDER BY total_fotos DESC"
+    
+    c.execute(query, params)
+    return c.fetchall()
+
+def obter_ultimo_relatorio(projeto_id=None, usuario_id=None, usuario_tipo=None):
+    """Obtém o último relatório registrado"""
+    c = conn.cursor()
+    
+    query = """
+        SELECT r.*, p.nome as projeto_nome, u.nome as usuario_nome
+        FROM relatorios_diarios r
+        JOIN projetos p ON r.projeto_id = p.id
+        JOIN usuarios u ON r.usuario_id = u.id
+    """
+    
+    params = []
+    
+    if projeto_id and projeto_id != 0:
+        query += " WHERE r.projeto_id = ?"
+        params.append(projeto_id)
+    elif usuario_tipo != "admin":
+        query += """ WHERE r.projeto_id IN (
+            SELECT projeto_id FROM usuarios_projetos WHERE usuario_id = ?
+            UNION
+            SELECT id FROM projetos WHERE responsavel_id = ? OR proprietario_id = ?
+        )"""
+        params.extend([usuario_id, usuario_id, usuario_id])
+    
+    query += " ORDER BY r.data DESC LIMIT 1"
+    
+    c.execute(query, params)
+    return c.fetchone()
 
 def carregar_relatorio(rel_id):
     c = conn.cursor()
@@ -344,7 +689,7 @@ def salvar_relatorio(data, projeto_id, usuario_id, **dados):
     conn.commit()
     return rel_id
 
-def salvar_foto(relatorio_id, foto_bytes, descricao=""):
+def salvar_foto(relatorio_id, foto_bytes, descricao="", atividade_principal=""):
     os.makedirs("fotos_obra", exist_ok=True)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     nome = f"foto_{relatorio_id}_{timestamp}.jpg"
@@ -354,7 +699,8 @@ def salvar_foto(relatorio_id, foto_bytes, descricao=""):
         f.write(foto_bytes)
     
     c = conn.cursor()
-    c.execute("INSERT INTO fotos_obra (relatorio_id, foto_path, descricao) VALUES (?,?,?)", (relatorio_id, caminho, descricao))
+    c.execute("INSERT INTO fotos_obra (relatorio_id, foto_path, descricao, atividade_principal) VALUES (?,?,?,?)", 
+              (relatorio_id, caminho, descricao, atividade_principal))
     conn.commit()
 
 def gerar_pdf(rel_id):
@@ -416,6 +762,178 @@ def get_day_name(date_obj):
                "Sexta-feira", "Sábado", "Domingo"]
     return days_pt[date_obj.weekday()]
 
+def parse_atividades(atividades_texto):
+    """Parseia o texto de atividades em estrutura hierárquica"""
+    atividades = []
+    linhas = atividades_texto.split('\n')
+    
+    for linha in linhas:
+        linha = linha.strip()
+        if not linha:
+            continue
+            
+        if ':' in linha:
+            partes = linha.split(':', 1)
+            atividade_principal = partes[0].strip()
+            subatividades_texto = partes[1].strip()
+            
+            # Parsear subatividades
+            subatividades = []
+            if subatividades_texto:
+                # Separar por vírgulas ou outros delimitadores
+                for sub in subatividades_texto.split(','):
+                    sub = sub.strip()
+                    if sub:
+                        # Verificar se tem indicação de status
+                        feito = '✅' in sub or 'Concluído' in sub or 'Feito' in sub
+                        # Remover indicadores de status
+                        nome_sub = sub.replace('✅', '').replace('❌', '').replace('Concluído', '').replace('Feito', '').replace('Pendente', '').strip()
+                        subatividades.append({
+                            'nome': nome_sub,
+                            'feito': feito
+                        })
+            
+            atividades.append({
+                'titulo': atividade_principal,
+                'subs': subatividades
+            })
+        else:
+            # Se não tem subatividades, é uma atividade simples
+            atividades.append({
+                'titulo': linha,
+                'subs': []
+            })
+    
+    return atividades
+
+# ============================================
+# FUNÇÕES PARA GRÁFICOS
+# ============================================
+def criar_grafico_atividades_vs_subatividades(atividades_parsed):
+    """Cria gráfico de barras de atividades vs subatividades"""
+    if not atividades_parsed:
+        return None
+    
+    atividades = []
+    totais_subs = []
+    concluidas_subs = []
+    
+    for atividade in atividades_parsed:
+        atividades.append(atividade['titulo'])
+        total = len(atividade['subs'])
+        concluidas = sum(1 for sub in atividade['subs'] if sub['feito'])
+        
+        totais_subs.append(total)
+        concluidas_subs.append(concluidas)
+    
+    fig = go.Figure(data=[
+        go.Bar(name='Total Subatividades', x=atividades, y=totais_subs, marker_color='#3B82F6'),
+        go.Bar(name='Subatividades Concluídas', x=atividades, y=concluidas_subs, marker_color='#10B981')
+    ])
+    
+    fig.update_layout(
+        title='Atividades vs Subatividades Concluídas',
+        barmode='group',
+        xaxis_title='Atividades',
+        yaxis_title='Quantidade',
+        template='plotly_white',
+        height=400
+    )
+    
+    return fig
+
+def criar_grafico_pizza_produtividade(atividades_parsed):
+    """Cria gráfico de pizza mostrando distribuição de produtividade"""
+    if not atividades_parsed:
+        return None
+    
+    total_subs = 0
+    concluidas_subs = 0
+    
+    for atividade in atividades_parsed:
+        total_subs += len(atividade['subs'])
+        concluidas_subs += sum(1 for sub in atividade['subs'] if sub['feito'])
+    
+    pendentes_subs = total_subs - concluidas_subs
+    
+    fig = go.Figure(data=[go.Pie(
+        labels=['Concluídas', 'Pendentes'],
+        values=[concluidas_subs, pendentes_subs],
+        hole=.3,
+        marker_colors=['#10B981', '#EF4444']
+    )])
+    
+    fig.update_layout(
+        title='Distribuição de Subatividades',
+        height=400
+    )
+    
+    return fig
+
+def criar_grafico_status_relatorios(relatorios):
+    """Cria gráfico de status dos relatórios"""
+    if not relatorios:
+        return None
+    
+    status_counts = {}
+    for rel in relatorios:
+        status = rel["status"] or "Não informado"
+        status_counts[status] = status_counts.get(status, 0) + 1
+    
+    fig = go.Figure(data=[go.Pie(
+        labels=list(status_counts.keys()),
+        values=list(status_counts.values()),
+        hole=.2,
+        marker_colors=['#10B981', '#F59E0B', '#EF4444', '#6B7280']
+    )])
+    
+    fig.update_layout(
+        title='Distribuição de Status dos Relatórios',
+        height=400
+    )
+    
+    return fig
+
+def criar_grafico_produtividade_temporal(relatorios):
+    """Cria gráfico de linha da produtividade ao longo do tempo"""
+    if not relatorios or len(relatorios) < 2:
+        return None
+    
+    datas = [r["data"] for r in relatorios]
+    produtividades = [r["produtividade"] for r in relatorios]
+    
+    fig = go.Figure()
+    
+    fig.add_trace(go.Scatter(
+        x=datas,
+        y=produtividades,
+        mode='lines+markers',
+        name='Produtividade',
+        line=dict(color='#3B82F6', width=3),
+        marker=dict(size=8)
+    ))
+    
+    # Adicionar média móvel
+    if len(produtividades) > 5:
+        media_movel = pd.Series(produtividades).rolling(window=5, min_periods=1).mean()
+        fig.add_trace(go.Scatter(
+            x=datas,
+            y=media_movel,
+            mode='lines',
+            name='Média Móvel (5 dias)',
+            line=dict(color='#EF4444', width=2, dash='dash')
+        ))
+    
+    fig.update_layout(
+        title='Evolução da Produtividade',
+        xaxis_title='Data',
+        yaxis_title='Produtividade (%)',
+        template='plotly_white',
+        height=400
+    )
+    
+    return fig
+
 # ============================================
 # LOGIN
 # ============================================
@@ -427,7 +945,7 @@ if 'usuario' not in st.session_state:
         user = st.text_input("Usuário")
         pwd = st.text_input("Senha", type="password")
         
-        if st.form_submit_button("Entrar"):
+        if st.form_submit_button("Entrar", type="primary"):
             logado = verificar_login(user, pwd)
             if logado:
                 st.session_state.usuario = {
@@ -483,12 +1001,8 @@ with st.sidebar:
     pagina = st.radio("Navegação", [item[1] for item in opcoes_usuario],
                       format_func=lambda x: next((i[0] for i in opcoes_usuario if i[1] == x), x))
 
-    # Para usuários que não são admin, mostrar apenas projetos que têm acesso
-    if usuario["tipo"] == "admin":
-        projetos = obter_projetos()
-    else:
-        projetos = obter_projetos_por_usuario(usuario["id"])
-    
+    # Obter projetos baseado no tipo de usuário
+    projetos = obter_projetos_por_usuario(usuario["id"], usuario["tipo"])
     projeto_dict = {p["id"]: p["nome"] for p in projetos}
     
     # Verificar se há projetos disponíveis
@@ -499,22 +1013,19 @@ with st.sidebar:
         st.info("Nenhum projeto disponível")
         projeto_id = 0
 
-    if st.button("Sair"):
+    if st.button("Sair", type="primary"):
         del st.session_state.usuario
         st.rerun()
 
 st.session_state.filtros = {"projeto_id": projeto_id if projeto_id != 0 else None}
 
 # ============================================
-# DASHBOARD
+# DASHBOARD - VERSÃO MELHORADA COM GRÁFICOS
 # ============================================
 def exibir_dashboard(projeto_id):
-    st.markdown("<h2 class='sub-header'>Dashboard</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 class='sub-header'>📊 Dashboard de Monitoramento</h2>", unsafe_allow_html=True)
     
-    if usuario["tipo"] == "admin":
-        projetos_lista = obter_projetos()
-    else:
-        projetos_lista = obter_projetos_por_usuario(usuario["id"])
+    projetos_lista = obter_projetos_por_usuario(usuario["id"], usuario["tipo"])
     
     relatorios = obter_relatorios_usuario(
         usuario["id"], 
@@ -522,40 +1033,255 @@ def exibir_dashboard(projeto_id):
         projeto_id=projeto_id
     )
     
+    # Obter último relatório para análise detalhada
+    ultimo_relatorio = obter_ultimo_relatorio(projeto_id, usuario["id"], usuario["tipo"])
+    
+    # ========== CARDS DE RESUMO ==========
+    st.subheader("📈 Resumo Geral")
+    
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Projetos", len(projetos_lista))
-    col2.metric("Relatórios", len(relatorios))
-    col3.metric("Dias Registrados", len(set(r["data"] for r in relatorios)) if relatorios else 0)
-    prod_media = np.mean([r["produtividade"] for r in relatorios]) if relatorios else 0
-    col4.metric("Produtividade Média", f"{prod_media:.1f}%")
-
-    if relatorios:
-        df_data = {
-            "ID": [r["id"] for r in relatorios],
-            "Data": [r["data"] for r in relatorios],
-            "Projeto": [r["projeto_nome"] for r in relatorios],
-            "Usuário": [r["usuario_nome"] for r in relatorios],
-            "Status": [r["status"] or "Não informado" for r in relatorios],
-            "Produtividade": [f"{r['produtividade'] or 0}%" for r in relatorios],
-        }
-        df = pd.DataFrame(df_data)
-        df["Data"] = pd.to_datetime(df["Data"]).dt.strftime('%d/%m/%Y')
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("Produtividade por Dia")
-            chart_data = pd.Series(
-                [r["produtividade"] for r in relatorios], 
-                index=pd.to_datetime([r["data"] for r in relatorios])
-            )
-            st.line_chart(chart_data)
+    
+    with col1:
+        st.markdown(f"""
+        <div class="card">
+            <div class="card-title">🏗️ Projetos Ativos</div>
+            <div class="card-value">{len(projetos_lista)}</div>
+            <div class="card-subtitle">Total de projetos</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown(f"""
+        <div class="card">
+            <div class="card-title">📋 Relatórios</div>
+            <div class="card-value">{len(relatorios)}</div>
+            <div class="card-subtitle">Dias registrados</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        prod_media = np.mean([r["produtividade"] for r in relatorios]) if relatorios else 0
+        st.markdown(f"""
+        <div class="card">
+            <div class="card-title">📊 Produtividade Média</div>
+            <div class="card-value">{prod_media:.1f}%</div>
+            <div class="card-subtitle">Média geral</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col4:
+        # Contar fotos
+        if projeto_id and projeto_id != 0:
+            fotos_por_atividade = contar_fotos_por_atividade(projeto_id, usuario["id"], usuario["tipo"])
+        else:
+            fotos_por_atividade = contar_fotos_por_atividade(None, usuario["id"], usuario["tipo"])
+        total_fotos = sum(item['total_fotos'] for item in fotos_por_atividade) if fotos_por_atividade else 0
         
-        with col2:
-            st.subheader("Status dos Dias")
-            status_counts = pd.Series([r["status"] or "Não informado" for r in relatorios]).value_counts()
-            st.bar_chart(status_counts)
+        st.markdown(f"""
+        <div class="card">
+            <div class="card-title">📸 Total de Fotos</div>
+            <div class="card-value">{total_fotos}</div>
+            <div class="card-subtitle">Imagens registradas</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # ========== SEÇÃO DE GRÁFICOS ==========
+    if relatorios or ultimo_relatorio:
+        st.markdown("---")
+        st.subheader("📊 Análise Visual de Dados")
+        
+        # Layout de gráficos
+        col_chart1, col_chart2 = st.columns(2)
+        
+        with col_chart1:
+            if relatorios:
+                # Gráfico de status dos relatórios
+                fig_status = criar_grafico_status_relatorios(relatorios)
+                if fig_status:
+                    st.plotly_chart(fig_status, use_container_width=True)
+        
+        with col_chart2:
+            if relatorios and len(relatorios) > 1:
+                # Gráfico de produtividade temporal
+                fig_prod_temporal = criar_grafico_produtividade_temporal(relatorios)
+                if fig_prod_temporal:
+                    st.plotly_chart(fig_prod_temporal, use_container_width=True)
+    
+    # ========== ANÁLISE DO ÚLTIMO RELATÓRIO ==========
+    if ultimo_relatorio:
+        st.markdown("---")
+        st.subheader(f"📅 Último Relatório: {ultimo_relatorio['data']}")
+        
+        # Parsear atividades do último relatório
+        atividades_parsed = parse_atividades(ultimo_relatorio['atividades'])
+        
+        # Card de Status e Produtividade
+        col_status, col_prod, col_fotos = st.columns(3)
+        
+        with col_status:
+            status_color = {
+                'Concluído': 'status-completed',
+                'Em andamento': 'status-in-progress',
+                'Atrasado': 'status-delayed',
+                'Paralisado': 'status-pending'
+            }.get(ultimo_relatorio['status'], 'status-pending')
+            
+            st.markdown(f"""
+            <div class="card">
+                <div class="card-title">📊 Status do Dia</div>
+                <div><span class="status-badge {status_color}">{ultimo_relatorio['status'] or 'Não informado'}</span></div>
+                <div class="card-subtitle">Projeto: {ultimo_relatorio['projeto_nome']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_prod:
+            prod = ultimo_relatorio['produtividade'] or 0
+            st.markdown(f"""
+            <div class="card">
+                <div class="card-title">🎯 Produtividade do Dia</div>
+                <div class="card-value">{prod}%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {prod}%"></div>
+                </div>
+                <div class="card-subtitle">Meta alcançada</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col_fotos:
+            # Contar fotos do último relatório
+            fotos_relatorio = obter_fotos_por_relatorio(ultimo_relatorio['id'])
+            st.markdown(f"""
+            <div class="card">
+                <div class="card-title">📸 Fotos do Dia</div>
+                <div class="card-value">{len(fotos_relatorio)}</div>
+                <div class="card-subtitle">Imagens registradas</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # ========== GRÁFICO DE ATIVIDADES VS SUBATIVIDADES ==========
+        if atividades_parsed:
+            st.markdown("---")
+            st.subheader("📋 Análise de Atividades")
+            
+            col_grafico1, col_grafico2 = st.columns(2)
+            
+            with col_grafico1:
+                # Gráfico de barras: atividades vs subatividades
+                fig_atividades = criar_grafico_atividades_vs_subatividades(atividades_parsed)
+                if fig_atividades:
+                    st.plotly_chart(fig_atividades, use_container_width=True)
+            
+            with col_grafico2:
+                # Gráfico de pizza: distribuição de produtividade
+                fig_pizza = criar_grafico_pizza_produtividade(atividades_parsed)
+                if fig_pizza:
+                    st.plotly_chart(fig_pizza, use_container_width=True)
+            
+            # Detalhes das atividades
+            total_subatividades = sum(len(atividade['subs']) for atividade in atividades_parsed)
+            subatividades_concluidas = sum(sum(1 for sub in atividade['subs'] if sub['feito']) for atividade in atividades_parsed)
+            
+            if total_subatividades > 0:
+                prod_percentual = (subatividades_concluidas / total_subatividades) * 100
+                st.markdown(f"""
+                <div class="card">
+                    <div class="card-title">📊 Resumo de Produtividade</div>
+                    <div style="display: flex; justify-content: space-between; margin: 1rem 0;">
+                        <div>
+                            <div style="font-size: 0.9rem; color: #718096;">Subatividades totais</div>
+                            <div style="font-size: 1.5rem; font-weight: bold;">{total_subatividades}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem; color: #718096;">Concluídas</div>
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #10B981;">{subatividades_concluidas}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.9rem; color: #718096;">Pendentes</div>
+                            <div style="font-size: 1.5rem; font-weight: bold; color: #F59E0B;">{total_subatividades - subatividades_concluidas}</div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {prod_percentual}%"></div>
+                    </div>
+                    <div class="card-subtitle">Taxa de conclusão: {prod_percentual:.1f}%</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # ========== OUTRAS INFORMAÇÕES DO RELATÓRIO ==========
+        if ultimo_relatorio['plano_amanha']:
+            st.markdown("---")
+            st.subheader("📅 Plano para Amanhã")
+            
+            try:
+                if ':' in ultimo_relatorio['plano_amanha']:
+                    data_plano, plano_texto = ultimo_relatorio['plano_amanha'].split(':', 1)
+                    data_plano = data_plano.strip()
+                    plano_texto = plano_texto.strip()
+                else:
+                    data_plano = "Data não especificada"
+                    plano_texto = ultimo_relatorio['plano_amanha']
+                
+                st.markdown(f"""
+                <div class="plan-card">
+                    <div class="card-title" style="color: white;">📋 Plano do Dia</div>
+                    <div style="font-size: 1.1rem; margin-bottom: 0.5rem; color: white;">
+                        <strong>Data:</strong> {data_plano}
+                    </div>
+                    <div style="background-color: rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 8px; color: white;">
+                        {plano_texto}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            except:
+                st.markdown(f"""
+                <div class="plan-card">
+                    <div class="card-title" style="color: white;">📋 Plano para Amanhã</div>
+                    <div style="background-color: rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 8px; color: white;">
+                        {ultimo_relatorio['plano_amanha']}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+    
     else:
-        st.info("Nenhum relatório registrado ainda.")
+        st.info("Nenhum relatório encontrado para o projeto selecionado.")
+    
+    # ========== LISTA DE PROJETOS DO USUÁRIO ==========
+    if projetos_lista:
+        st.markdown("---")
+        st.subheader("🏗️ Meus Projetos")
+        
+        col_proj1, col_proj2, col_proj3 = st.columns(3)
+        
+        projetos_cols = [col_proj1, col_proj2, col_proj3]
+        
+        for idx, proj in enumerate(projetos_lista[:6]):  # Mostrar até 6 projetos
+            with projetos_cols[idx % 3]:
+                status_color = {
+                    'Concluído': '#10B981',
+                    'Em andamento': '#3B82F6',
+                    'Atrasado': '#EF4444',
+                    'Cancelado': '#6B7280',
+                    'Planejamento': '#F59E0B'
+                }.get(proj['status'], '#6B7280')
+                
+                st.markdown(f"""
+                <div class="card" style="border-left-color: {status_color};">
+                    <div class="card-title">{proj['nome']}</div>
+                    <div style="font-size: 0.9rem; color: #6B7280; margin-bottom: 0.5rem;">
+                        📍 {proj['localizacao']}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-size: 0.8rem; color: #9CA3AF;">Status</div>
+                            <div style="font-weight: bold; color: {status_color};">{proj['status']}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.8rem; color: #9CA3AF;">Orçamento</div>
+                            <div style="font-weight: bold;">{proj['orcamento_total']:,.0f} MT</div>
+                        </div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
 
 # ============================================
 # GERENCIAR USUÁRIOS
@@ -609,19 +1335,19 @@ def exibir_gerenciar_usuarios():
                     col_btn1, col_btn2, col_btn3 = st.columns(3)
                     
                     with col_btn1:
-                        if st.button("✏️ Editar", key=f"edit_user_{user['id']}"):
+                        if st.button("✏️ Editar", key=f"edit_user_{user['id']}", use_container_width=True):
                             st.session_state.editando_usuario_id = user['id']
                             st.rerun()
                     
                     with col_btn2:
-                        if st.button("🔗 Projetos", key=f"proj_user_{user['id']}"):
+                        if st.button("🔗 Projetos", key=f"proj_user_{user['id']}", use_container_width=True):
                             st.session_state.gerenciar_projetos_usuario_id = user['id']
                             st.rerun()
                     
                     with col_btn3:
                         if user['id'] != usuario["id"]:  # Não permitir desativar a si mesmo
                             if user['ativo']:
-                                if st.button("❌", key=f"deact_{user['id']}"):
+                                if st.button("❌ Desativar", key=f"deact_{user['id']}", use_container_width=True):
                                     atualizar_usuario(
                                         user['id'], 
                                         user['username'], 
@@ -634,7 +1360,7 @@ def exibir_gerenciar_usuarios():
                                     st.success(f"Usuário {user['nome']} desativado!")
                                     st.rerun()
                             else:
-                                if st.button("✅", key=f"act_{user['id']}"):
+                                if st.button("✅ Ativar", key=f"act_{user['id']}", use_container_width=True):
                                     atualizar_usuario(
                                         user['id'], 
                                         user['username'], 
@@ -685,7 +1411,7 @@ def exibir_gerenciar_usuarios():
                 
                 col_btn1, col_btn2 = st.columns(2)
                 with col_btn1:
-                    if st.form_submit_button("💾 Salvar Alterações", use_container_width=True):
+                    if st.form_submit_button("💾 Salvar Alterações", use_container_width=True, type="primary"):
                         try:
                             atualizar_usuario(
                                 user_edit['id'], 
@@ -768,7 +1494,7 @@ def exibir_gerenciar_usuarios():
                     st.rerun()
 
 # ============================================
-# GERENCIAR PROJETOS
+# GERENCIAR PROJETOS - COM EXCLUSÃO
 # ============================================
 def exibir_gerenciar_projetos():
     st.markdown("<h2 class='sub-header'>🏗️ Gerenciar Projetos</h2>", unsafe_allow_html=True)
@@ -781,6 +1507,9 @@ def exibir_gerenciar_projetos():
     # Inicializar estados
     if "editando_projeto_id" not in st.session_state:
         st.session_state.editando_projeto_id = None
+    
+    if "confirmar_exclusao" not in st.session_state:
+        st.session_state.confirmar_exclusao = None
     
     if "gerenciar_projetos_usuario_id" in st.session_state:
         exibir_gerenciar_projetos_usuario(st.session_state.gerenciar_projetos_usuario_id)
@@ -799,7 +1528,7 @@ def exibir_gerenciar_projetos():
         
         for proj in projetos:
             with st.container(border=True):
-                col1, col2, col3 = st.columns([3, 2, 3])
+                col1, col2, col3, col4 = st.columns([3, 2, 2, 2])
                 
                 with col1:
                     st.write(f"**🏗️ {proj['nome']}**")
@@ -811,24 +1540,60 @@ def exibir_gerenciar_projetos():
                     st.write(f"**📅 Início:** {proj['data_inicio']}")
                     st.write(f"**📅 Término:** {proj['data_fim_previsto']}")
                     st.write(f"**📊 Status:** {proj['status']}")
-                    st.write(f"**👤 Responsável:** {proj['responsavel_nome'] or 'Não definido'}")
                 
                 with col3:
+                    st.write(f"**👤 Responsável:** {proj['responsavel_nome'] or 'Não definido'}")
+                    st.write(f"**🏢 Proprietário:** {proj['proprietario_nome'] or 'Não definido'}")
+                
+                with col4:
                     col_btn1, col_btn2, col_btn3 = st.columns(3)
                     
                     with col_btn1:
-                        if st.button("✏️ Editar", key=f"edit_proj_{proj['id']}"):
+                        if st.button("✏️", key=f"edit_proj_{proj['id']}", help="Editar projeto", use_container_width=True):
                             st.session_state.editando_projeto_id = proj['id']
                             st.rerun()
                     
                     with col_btn2:
-                        if st.button("👥 Acessos", key=f"access_proj_{proj['id']}"):
+                        if st.button("👥", key=f"access_proj_{proj['id']}", help="Gerenciar acessos", use_container_width=True):
                             st.session_state.gerenciar_acessos_projeto_id = proj['id']
                             st.rerun()
                     
                     with col_btn3:
-                        if st.button("🗑️", key=f"del_proj_{proj['id']}"):
-                            st.warning("Funcionalidade de exclusão em desenvolvimento")
+                        if st.button("🗑️", key=f"del_proj_{proj['id']}", help="Excluir projeto", use_container_width=True):
+                            st.session_state.confirmar_exclusao = proj['id']
+                            st.rerun()
+    
+    # Modal de confirmação de exclusão
+    if st.session_state.confirmar_exclusao is not None:
+        projeto_excluir = None
+        for p in projetos:
+            if p['id'] == st.session_state.confirmar_exclusao:
+                projeto_excluir = p
+                break
+        
+        if projeto_excluir:
+            st.warning(f"⚠️ **Atenção!** Você está prestes a excluir o projeto **{projeto_excluir['nome']}**.")
+            st.error("**Esta ação é irreversível e excluirá:**")
+            st.error("- Todos os relatórios diários relacionados")
+            st.error("- Todas as fotos do projeto")
+            st.error("- Todas as associações de usuários ao projeto")
+            
+            col_confirm1, col_confirm2, col_confirm3 = st.columns([1, 1, 2])
+            
+            with col_confirm1:
+                if st.button("✅ Confirmar Exclusão", type="primary", use_container_width=True):
+                    try:
+                        excluir_projeto(projeto_excluir['id'])
+                        st.success(f"Projeto {projeto_excluir['nome']} excluído com sucesso!")
+                        st.session_state.confirmar_exclusao = None
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Erro ao excluir projeto: {str(e)}")
+            
+            with col_confirm2:
+                if st.button("❌ Cancelar", use_container_width=True):
+                    st.session_state.confirmar_exclusao = None
+                    st.rerun()
     
     # Formulário para adicionar/editar projeto
     st.markdown("---")
@@ -853,9 +1618,17 @@ def exibir_gerenciar_projetos():
 
 def exibir_formulario_projeto(projeto=None):
     """Exibe formulário para adicionar/editar projeto"""
-    # Obter lista de usuários para selecionar responsável
+    # Obter lista de usuários para selecionar responsável e proprietário
     usuarios = obter_usuarios()
-    usuarios_opcoes = {u['id']: f"{u['nome']} ({u['tipo']})" for u in usuarios if u['ativo']}
+    usuarios_ativos = [u for u in usuarios if u['ativo']]
+    
+    # Filtrar responsáveis (admin ou fiscal)
+    responsaveis_disponiveis = [u for u in usuarios_ativos if u['tipo'] in ['admin', 'fiscal']]
+    responsavel_opcoes = {r['id']: f"{r['nome']} ({r['tipo']})" for r in responsaveis_disponiveis}
+    
+    # Filtrar proprietários
+    proprietarios_disponiveis = [u for u in usuarios_ativos if u['tipo'] in ['proprietario']]
+    proprietario_opcoes = {p['id']: f"{p['nome']} ({p['tipo']})" for p in proprietarios_disponiveis}
     
     with st.form(f"form_projeto_{projeto['id'] if projeto else 'novo'}"):
         col1, col2 = st.columns(2)
@@ -891,12 +1664,9 @@ def exibir_formulario_projeto(projeto=None):
                                  index=["Em andamento", "Concluído", "Atrasado", "Cancelado", "Planejamento"].index(projeto['status']) if projeto and projeto['status'] in ["Em andamento", "Concluído", "Atrasado", "Cancelado", "Planejamento"] else 0)
             
             # Selecionar responsável
-            responsaveis_disponiveis = [u for u in usuarios if u['ativo'] and u['tipo'] in ['admin', 'fiscal']]
-            responsavel_opcoes = {r['id']: f"{r['nome']} ({r['tipo']})" for r in responsaveis_disponiveis}
-            
             if responsavel_opcoes:
                 responsavel_id = st.selectbox(
-                    "Responsável",
+                    "Responsável*",
                     options=list(responsavel_opcoes.keys()),
                     format_func=lambda x: responsavel_opcoes[x],
                     index=list(responsavel_opcoes.keys()).index(projeto['responsavel_id']) if projeto and projeto['responsavel_id'] in responsavel_opcoes else 0
@@ -904,6 +1674,18 @@ def exibir_formulario_projeto(projeto=None):
             else:
                 st.warning("Nenhum responsável disponível (admin ou fiscal ativo)")
                 responsavel_id = None
+            
+            # Selecionar proprietário - NOVO CAMPO
+            if proprietario_opcoes:
+                proprietario_id = st.selectbox(
+                    "Proprietário*",
+                    options=list(proprietario_opcoes.keys()),
+                    format_func=lambda x: proprietario_opcoes[x],
+                    index=list(proprietario_opcoes.keys()).index(projeto['proprietario_id']) if projeto and projeto['proprietario_id'] in proprietario_opcoes else 0
+                )
+            else:
+                st.warning("Nenhum proprietário disponível")
+                proprietario_id = None
         
         col_btn1, col_btn2 = st.columns(2)
         with col_btn1:
@@ -919,6 +1701,10 @@ def exibir_formulario_projeto(projeto=None):
                         erros.append("Orçamento deve ser maior que zero")
                     if data_fim_previsto <= data_inicio:
                         erros.append("Data de término deve ser após a data de início")
+                    if not responsavel_id:
+                        erros.append("Selecione um responsável")
+                    if not proprietario_id:
+                        erros.append("Selecione um proprietário")
                     
                     if erros:
                         for erro in erros:
@@ -934,7 +1720,8 @@ def exibir_formulario_projeto(projeto=None):
                                 data_inicio.strftime("%Y-%m-%d"),
                                 data_fim_previsto.strftime("%Y-%m-%d"),
                                 status,
-                                responsavel_id
+                                responsavel_id,
+                                proprietario_id
                             )
                             st.success(f"Projeto {nome} atualizado com sucesso!")
                             st.session_state.editando_projeto_id = None
@@ -953,6 +1740,10 @@ def exibir_formulario_projeto(projeto=None):
                         erros.append("Orçamento deve ser maior que zero")
                     if data_fim_previsto <= data_inicio:
                         erros.append("Data de término deve ser após a data de início")
+                    if not responsavel_id:
+                        erros.append("Selecione um responsável")
+                    if not proprietario_id:
+                        erros.append("Selecione um proprietário")
                     
                     if erros:
                         for erro in erros:
@@ -966,7 +1757,8 @@ def exibir_formulario_projeto(projeto=None):
                                 orcamento_total,
                                 data_inicio.strftime("%Y-%m-%d"),
                                 data_fim_previsto.strftime("%Y-%m-%d"),
-                                responsavel_id
+                                responsavel_id,
+                                proprietario_id
                             )
                             st.success(f"Projeto {nome} criado com sucesso! ID: {novo_id}")
                             st.rerun()
@@ -1057,7 +1849,7 @@ def exibir_gerenciar_projetos_usuario(usuario_id):
                         st.write(f"**📊 Status:** {proj['status']}")
                     
                     with col3:
-                        if st.button("❌ Remover", key=f"rem_proj_{proj['id']}_{usuario_id}"):
+                        if st.button("❌ Remover", key=f"rem_proj_{proj['id']}_{usuario_id}", use_container_width=True):
                             try:
                                 desassociar_usuario_projeto(usuario_id, proj['id'])
                                 st.success(f"Acesso removido do projeto {proj['nome']}")
@@ -1097,7 +1889,144 @@ def exibir_gerenciar_projetos_usuario(usuario_id):
         st.info("Todos os projetos já estão atribuídos a este usuário ou não há projetos disponíveis.")
 
 # ============================================
-# REGISTRO DE RELATÓRIOS - VERSÃO SIMPLIFICADA
+# GALERIA DE FOTOS COM ZOOM - AGRUPADA POR ATIVIDADE
+# ============================================
+def exibir_galeria(projeto_id):
+    st.markdown("<h2 class='sub-header'>📸 Galeria de Fotos da Obra</h2>", unsafe_allow_html=True)
+
+    # Obter fotos agrupadas por atividade
+    fotos = obter_fotos_por_atividade(projeto_id, usuario["id"], usuario["tipo"])
+    
+    if not fotos:
+        st.info("Nenhuma foto encontrada para o projeto selecionado.")
+        return
+    
+    # Estatísticas
+    atividades_unicas = set(f['atividade_agrupada'] for f in fotos)
+    st.success(f"🖼️ {len(fotos)} foto(s) encontrada(s) em {len(atividades_unicas)} atividade(s)")
+    
+    # Filtro por atividade
+    atividades_opcoes = ["Todas as atividades"] + sorted(list(atividades_unicas))
+    atividade_selecionada = st.selectbox("Filtrar por atividade:", atividades_opcoes)
+    
+    if atividade_selecionada != "Todas as atividades":
+        fotos_filtradas = [f for f in fotos if f['atividade_agrupada'] == atividade_selecionada]
+    else:
+        fotos_filtradas = fotos
+    
+    # Agrupar fotos por atividade
+    fotos_por_atividade = {}
+    for foto in fotos_filtradas:
+        atividade = foto['atividade_agrupada']
+        if atividade not in fotos_por_atividade:
+            fotos_por_atividade[atividade] = []
+        fotos_por_atividade[atividade].append(foto)
+    
+    # Exibir por atividade
+    for atividade, lista_fotos in fotos_por_atividade.items():
+        with st.expander(f"📁 {atividade} ({len(lista_fotos)} foto(s))", expanded=True):
+            # Dividir em colunas
+            num_colunas = 4
+            colunas = st.columns(num_colunas)
+            
+            for idx, foto in enumerate(lista_fotos):
+                with colunas[idx % num_colunas]:
+                    with st.container(border=True):
+                        try:
+                            img = Image.open(foto["foto_path"])
+                            image_zoom(
+                                image=img, 
+                                mode="dragmove", 
+                                size=(250, 250), 
+                                zoom_factor=5.0, 
+                                keep_aspect_ratio=True
+                            )
+                        except Exception as e:
+                            st.error(f"Erro ao carregar imagem: {e}")
+                            continue
+
+                        st.caption(f"**🏗️ {foto['projeto_nome']}**")
+                        st.caption(f"**📅 {foto['data']}**")
+                        
+                        if foto["descricao"] and str(foto["descricao"]).strip():
+                            st.caption(f"**📝 {foto['descricao'][:40]}...**")
+                        
+                        st.caption(f"**⏰ {str(foto['data_upload'])[:16].replace('T', ' ')}**")
+
+                        try:
+                            with open(foto["foto_path"], "rb") as f:
+                                img_bytes = f.read()
+                            
+                            st.download_button(
+                                "💾 Baixar", 
+                                data=img_bytes, 
+                                file_name=os.path.basename(foto["foto_path"]), 
+                                mime="image/jpeg", 
+                                key=f"dl_{foto['id']}_{idx}"
+                            )
+                        except:
+                            st.warning("Erro no download")
+
+# ============================================
+# FUNCIONALIDADES SIMPLIFICADAS
+# ============================================
+def exibir_alertas():
+    st.markdown("<h2 class='sub-header'>🚨 Alertas e Notificações</h2>", unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.markdown("""
+        <div class="card" style="border-left-color: #EF4444;">
+            <div class="card-title">⚠️ Projetos Atrasados</div>
+            <div class="card-value">2</div>
+            <div class="card-subtitle">Necessitam de atenção</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="card" style="border-left-color: #F59E0B;">
+            <div class="card-title">📅 Prazos Próximos</div>
+            <div class="card-value">3</div>
+            <div class="card-subtitle">Vencimento em 7 dias</div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        st.markdown("""
+        <div class="card" style="border-left-color: #10B981;">
+            <div class="card-title">✅ Relatórios Pendentes</div>
+            <div class="card-value">5</div>
+            <div class="card-subtitle">Para esta semana</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+def exibir_configuracoes():
+    st.markdown("<h2 class='sub-header'>⚙️ Configurações do Sistema</h2>", unsafe_allow_html=True)
+    
+    tab1, tab2, tab3 = st.tabs(["🔐 Segurança", "📧 Notificações", "🌐 Sistema"])
+    
+    with tab1:
+        st.subheader("Configurações de Segurança")
+        st.checkbox("Exigir autenticação de dois fatores")
+        st.checkbox("Log de atividades do usuário")
+        st.checkbox("Notificar sobre logins suspeitos")
+        
+    with tab2:
+        st.subheader("Configurações de Notificação")
+        st.checkbox("Alertas por email", value=True)
+        st.checkbox("Notificações no sistema", value=True)
+        st.checkbox("Relatórios semanais automáticos")
+        
+    with tab3:
+        st.subheader("Configurações do Sistema")
+        st.selectbox("Idioma", ["Português", "Inglês", "Espanhol"])
+        st.selectbox("Fuso Horário", ["GMT+2 (Maputo)", "GMT-3 (Brasília)"])
+        st.number_input("Dias para retenção de dados", min_value=30, max_value=365, value=90)
+
+# ============================================
+# REGISTRO DE RELATÓRIOS - DO CÓDIGO 2
 # ============================================
 def exibir_registro_relatorios(usuario):
     st.markdown("<h2 class='sub-header'>📝 Registrar Relatório Diário</h2>", unsafe_allow_html=True)
@@ -1602,83 +2531,7 @@ def exibir_lista_relatorios(usuario):
             st.rerun()
 
 # ============================================
-# GALERIA DE FOTOS COM ZOOM - CORRIGIDA
-# ============================================
-def exibir_galeria(projeto_id):
-    st.markdown("<h2 class='sub-header'>📸 Galeria de Fotos da Obra</h2>", unsafe_allow_html=True)
-
-    c = conn.cursor()
-    query = """
-    SELECT f.id, f.foto_path, f.descricao, f.data_upload, r.data, p.nome
-    FROM fotos_obra f
-    JOIN relatorios_diarios r ON f.relatorio_id = r.id
-    JOIN projetos p ON r.projeto_id = p.id
-    """
-    params = []
-    
-    if projeto_id and projeto_id != 0:
-        query += " WHERE r.projeto_id = ?"
-        params.append(projeto_id)
-    elif usuario["tipo"] != "admin":
-        # Para não-admins, filtrar apenas projetos que têm acesso
-        query += " WHERE r.projeto_id IN (SELECT projeto_id FROM usuarios_projetos WHERE usuario_id = ?)"
-        params.append(usuario["id"])
-    
-    query += " ORDER BY f.data_upload DESC"
-    c.execute(query, params)
-    fotos = c.fetchall()
-
-    if not fotos:
-        st.info("Nenhuma foto encontrada para o projeto selecionado.")
-        return
-
-    st.success(f"🖼️ {len(fotos)} foto(s) encontrada(s)")
-
-    # Criar colunas dinamicamente
-    num_colunas = 4
-    cols = st.columns(num_colunas)
-    
-    for idx, foto in enumerate(fotos):
-        with cols[idx % num_colunas]:
-            with st.container(border=True):
-                try:
-                    img = Image.open(foto["foto_path"])
-                    # CORREÇÃO: Removido o parâmetro 'key' que causa o erro
-                    image_zoom(
-                        image=img, 
-                        mode="dragmove", 
-                        size=(280, 280), 
-                        zoom_factor=5.0, 
-                        keep_aspect_ratio=True
-                    )
-                except Exception as e:
-                    st.error(f"Erro ao carregar imagem: {e}")
-                    continue
-
-                st.caption(f"🏗️ **{foto['nome']}**")
-                st.caption(f"📅 **{foto['data']}**")
-                
-                if foto["descricao"] and str(foto["descricao"]).strip():
-                    st.caption(f"📝 **{foto['descricao'][:50]}...**")
-                
-                st.caption(f"⏰ **{str(foto['data_upload'])[:16].replace('T', ' ')}**")
-
-                try:
-                    with open(foto["foto_path"], "rb") as f:
-                        img_bytes = f.read()
-                    
-                    st.download_button(
-                        "💾 Baixar", 
-                        data=img_bytes, 
-                        file_name=os.path.basename(foto["foto_path"]), 
-                        mime="image/jpeg", 
-                        key=f"dl_{foto['id']}_{idx}"
-                    )
-                except:
-                    st.warning("Erro no download")
-
-# ============================================
-# RELATÓRIOS (versão simplificada)
+# RELATÓRIOS (versão simplificada do Código 2)
 # ============================================
 def exibir_relatorios(projeto_id):
     st.markdown("<h2 class='sub-header'>📊 Relatórios Diários</h2>", unsafe_allow_html=True)
@@ -1733,10 +2586,14 @@ elif pagina == "Gerenciar Usuários":
     exibir_gerenciar_usuarios()
 elif pagina == "Gerenciar Projetos":
     exibir_gerenciar_projetos()
-elif pagina == "Relatórios":
-    exibir_relatorios(st.session_state.filtros["projeto_id"])
 elif pagina == "Galeria":
     exibir_galeria(st.session_state.filtros["projeto_id"])
+elif pagina == "Alertas":
+    exibir_alertas()
+elif pagina == "Relatórios":
+    exibir_relatorios(st.session_state.filtros["projeto_id"])
+elif pagina == "Configurações":
+    exibir_configuracoes()
 else:
     st.markdown(f"<h2 class='sub-header'>{pagina}</h2>", unsafe_allow_html=True)
     st.info(f"Seção {pagina} em desenvolvimento...")
